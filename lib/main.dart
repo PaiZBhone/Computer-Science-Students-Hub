@@ -3,6 +3,7 @@ import 'package:flutter_helloworld/myhome.dart';
 import 'package:flutter_helloworld/login_screen.dart';
 import 'package:flutter_helloworld/splash_screen.dart';
 import 'add_post.dart';
+import 'profile_screen.dart';
 
 void main() => runApp(const MyApp());
 
@@ -24,6 +25,12 @@ class MyApp extends StatelessWidget {
                 fontSize: 18,
               ),
             ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.settings),
+                onPressed: () {},
+              ),
+            ],
             backgroundColor: Colors.blue,
             bottom: const TabBar(
               tabs: [
@@ -45,7 +52,7 @@ class MyApp extends StatelessWidget {
               Myhome(),
               AddPostScreen(),
               Text('Notification'),
-              LoginScreen(),
+              ProfileScreen(),
             ],
           ),
         ),
