@@ -3,7 +3,7 @@ import 'package:flutter_helloworld/myhome.dart';
 import 'package:flutter_helloworld/login_scree.dart';
 import 'package:flutter_helloworld/splash_screen.dart';
 
-void main() => runApp(const MaterialApp(home: SplashScreen()));
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -16,8 +16,12 @@ class MyApp extends StatelessWidget {
         child: Scaffold(
           appBar: AppBar(
             title: const Text(
-              'Testing APP',
-              style: TextStyle(fontSize: 25, color: Colors.white),
+              'College of DIT\n Computer Science',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
             ),
             backgroundColor: Colors.blue,
             bottom: const TabBar(
