@@ -4,6 +4,7 @@ import 'package:flutter_helloworld/login_screen.dart';
 import 'package:flutter_helloworld/splash_screen.dart';
 import 'add_post.dart';
 import 'profile_screen.dart';
+import 'notification.dart';
 
 void main() => runApp(const MyApp());
 
@@ -51,7 +52,7 @@ class MyApp extends StatelessWidget {
               //Text('Home'),
               Myhome(),
               AddPostScreen(),
-              Text('Notification'),
+              NotificationsScreen(),
               ProfileScreen(),
             ],
           ),
