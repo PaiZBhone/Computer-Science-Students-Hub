@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_helloworld/myhome.dart';
-import 'package:flutter_helloworld/login_scree.dart';
+import 'package:flutter_helloworld/login_screen.dart';
 import 'package:flutter_helloworld/splash_screen.dart';
 import 'add_post.dart';
 
