@@ -6,7 +6,12 @@ import 'add_post.dart';
 import 'profile_screen.dart';
 import 'notification.dart';
 
-void main() => runApp(const MyApp());
+void main() => runApp(
+  const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: SplashScreen(),
+  ),
+);
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -19,7 +24,7 @@ class MyApp extends StatelessWidget {
         child: Scaffold(
           appBar: AppBar(
             title: const Text(
-              'College of DIT\n Computer Science',
+              'College of DIT\n Computer Science Club',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
