@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_helloworld/myhome.dart';
 import 'package:flutter_helloworld/login_scree.dart';
-import 'package:flutter_helloworld/splash_scree.dart';
+import 'package:flutter_helloworld/splash_screen.dart';
 
 void main() => runApp(const MaterialApp(home: SplashScreen()));
 
