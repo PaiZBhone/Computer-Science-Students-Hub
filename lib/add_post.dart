@@ -89,20 +89,18 @@ class _AddPostScreenState extends State<AddPostScreen> {
             const SizedBox(height: 16),
 
             // 2. Multi-line Text Input
-            Expanded(
-              child: TextField(
-                controller: _contentController,
-                maxLines: null, // Allows the text box to grow infinitely
-                expands: true, // Fills the available space
-                textAlignVertical: TextAlignVertical.top,
-                decoration: InputDecoration(
-                  hintText: 'What do you want to share with the Club?',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
+            TextField(
+              controller: _contentController,
+              minLines: 6,
+              maxLines: 10,
+              textAlignVertical: TextAlignVertical.top,
+              decoration: InputDecoration(
+                hintText: 'What do you want to share with the Club?',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                filled: true,
+                fillColor: Colors.white,
               ),
             ),
             const SizedBox(height: 16),
@@ -121,7 +119,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   elevation: 2,
                 ),
                 onPressed: _publishPost,
-                icon: const Icon(Icons.send),
                 label: const Text(
                   'Publish Post',
                   style: TextStyle(
@@ -129,6 +126,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                icon: const Icon(Icons.send),
               ),
             ),
           ],
