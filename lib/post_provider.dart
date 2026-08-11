@@ -87,7 +87,7 @@ class PostProvider extends ChangeNotifier {
   void addPost(String category, String content) {
     _posts.insert(0, {
       'id': DateTime.now().toString(), // Generates a unique ID
-      'authorName': 'Pai Zaw Bhone',
+      'uploaderName': 'CS BANANA',
       'role': 'Student',
       'timeAgo': 'Just now',
       'category': category,

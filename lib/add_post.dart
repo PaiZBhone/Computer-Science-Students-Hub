@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'post_provider.dart';
+import 'package:provider/provider.dart';
 
 class AddPostScreen extends StatefulWidget {
   const AddPostScreen({super.key});
@@ -35,6 +37,12 @@ class _AddPostScreenState extends State<AddPostScreen> {
       return;
     }
 
+    // Tell the Provider to add the new post to the central list
+    Provider.of<PostProvider>(
+      context,
+      listen: false,
+    ).addPost(_selectedCategory!, _contentController.text);
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Post published successfully!'),
@@ -42,7 +50,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
       ),
     );
 
-    // Clear the form after "posted"
+    // Clear the form after publishing
     _contentController.clear();
     setState(() {
       _selectedCategory = null;
