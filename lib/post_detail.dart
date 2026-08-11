@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class PostDetailScreen extends StatelessWidget {
   final String uploaderName;
   final String role;
+  final String category;
   final String timeAgo;
   final String content;
 
@@ -10,6 +11,7 @@ class PostDetailScreen extends StatelessWidget {
     super.key,
     required this.uploaderName,
     required this.role,
+    required this.category,
     required this.timeAgo,
     required this.content,
   });

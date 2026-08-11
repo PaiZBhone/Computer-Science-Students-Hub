@@ -6,6 +6,7 @@ import 'post_provider.dart';
 class PostCard extends StatelessWidget {
   final String id;
   final String uploaderName;
+  final String category;
   final String role;
   final String timeAgo;
   final String content;
@@ -16,6 +17,7 @@ class PostCard extends StatelessWidget {
     super.key,
     required this.id,
     required this.uploaderName,
+    required this.category,
     required this.role,
     required this.timeAgo,
     required this.content,
@@ -35,6 +37,7 @@ class PostCard extends StatelessWidget {
             builder: (context) => PostDetailScreen(
               uploaderName: uploaderName,
               role: role,
+              category: category,
               timeAgo: timeAgo,
               content: content,
             ),
@@ -52,7 +55,7 @@ class PostCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header: Avatar, Name, Role, Options
+              // Header: Avatar, Name, Role, Category(added new), Options
               Row(
                 children: [
                   const CircleAvatar(
@@ -76,6 +79,16 @@ class PostCard extends StatelessWidget {
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 2), // Tiny spacing
+                        Text(
+                          category,
+                          style: TextStyle(
+                            color:
+                                Colors.blue[700], // Makes the category pop
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],

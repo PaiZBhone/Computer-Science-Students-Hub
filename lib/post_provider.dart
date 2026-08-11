@@ -22,7 +22,7 @@ class PostProvider extends ChangeNotifier {
     try {
       // 2. HTTP request
       final url = Uri.parse(
-        'https://api.jsonbin.io/v3/b/6a7ae643da38895dfed4db0b',
+        'https://api.jsonbin.io/v3/b/6a7ae6bbf5f4af5e29065838',
       );
       final response = await http.get(url);
 

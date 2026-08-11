@@ -20,6 +20,13 @@ class _MyhomeState extends State<Myhome> {
     '📌 Announcements',
     '📚 Academic',
     '🎮 Social',
+    '🍔 Food',
+    '🏫 Campus',
+    '🎵 Music',
+    '😂 Fun',
+    '💻 Tech',
+    '👽 Random',
+    '🌧️ Weather',
   ];
 
   // 3. Virtual dummy posts
@@ -179,6 +186,7 @@ class _MyhomeState extends State<Myhome> {
                       id: post['id'],
                       uploaderName: post['uploaderName'],
                       role: post['role'],
+                      category: post['category'],
                       timeAgo: post['timeAgo'],
                       content: post['content'],
                       upvotes: post['upvotes'],
