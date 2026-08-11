@@ -18,6 +18,13 @@ class _AddPostScreenState extends State<AddPostScreen> {
     '📌 Announcements',
     '📚 Academic',
     '🎮 Social',
+    '🍔 Food',
+    '🏫 Campus',
+    '🎵 Music',
+    '😂 Fun',
+    '💻 Tech',
+    '👽 Random',
+    '🌧️ Weather',
   ];
 
   @override
