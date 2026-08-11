@@ -11,10 +11,10 @@ class Myhome extends StatefulWidget {
 }
 
 class _MyhomeState extends State<Myhome> {
-  // 1. State variable to track the currently selected filter
   String selectedFilter = 'All';
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
-  // 2. The available filter categories
   final List<String> filters = [
     'All',
     '📌 Announcements',
@@ -95,15 +95,23 @@ class _MyhomeState extends State<Myhome> {
 
   @override
   Widget build(BuildContext context) {
-    // 4. Filter the posts before displaying them
     final allPosts = Provider.of<PostProvider>(context).posts;
 
-    // Filter the posts exactly like we did before
-    final displayedPosts = selectedFilter == 'All'
-        ? allPosts
-        : allPosts
-              .where((post) => post['category'] == selectedFilter)
-              .toList();
+    // Filter by BOTH Category and Search Query
+    final displayedPosts = allPosts.where((post) {
+      final matchesCategory =
+          selectedFilter == 'All' || post['category'] == selectedFilter;
+
+      final matchesSearch =
+          post['content'].toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          ) ||
+          post['uploaderName'].toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          );
+
+      return matchesCategory && matchesSearch;
+    }).toList();
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
@@ -117,6 +125,59 @@ class _MyhomeState extends State<Myhome> {
               ).fetchPosts(),
               child: CustomScrollView(
                 slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (value) {
+                          // Every time the user types a letter, the screen updates!
+                          setState(() {
+                            _searchQuery = value;
+                          });
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Search posts or users...',
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: Colors.grey,
+                          ),
+                          // Show a clear 'X' button only if there is text
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(
+                                    Icons.clear,
+                                    color: Colors.grey,
+                                  ),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() {
+                                      _searchQuery = '';
+                                    });
+                                  },
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 0,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            borderSide: BorderSide(
+                              color: Colors.grey[300]!,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            borderSide: BorderSide(
+                              color: Colors.grey[300]!,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                   // const SliverAppBar(
                   //   backgroundColor: Colors.blue,
                   //   expandedHeight: 120.0,
