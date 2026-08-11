@@ -9,43 +9,63 @@ class PostProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get posts => _posts;
   bool get isLoading => _isLoading;
 
-  //fetches data when the app starts
   PostProvider() {
     fetchPosts();
   }
 
   Future<void> fetchPosts() async {
-    // 1. Set loading to true and update the UI
     _isLoading = true;
     notifyListeners();
 
     try {
-      // 2. HTTP request
       final url = Uri.parse(
         'https://api.jsonbin.io/v3/b/6a7ae6bbf5f4af5e29065838',
       );
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
-        // 3. Decode the JSON response
         final data = json.decode(response.body);
-
         final List<dynamic> loadedPosts = data['record']['posts'];
 
-        // 4. Convert the dynamic list back into our required Map format
         _posts = loadedPosts
             .map((post) => post as Map<String, dynamic>)
             .toList();
+
+        // Sorting the post with custom time parser
+        _posts.sort((a, b) {
+          DateTime timeA = _parseTimeAgo(a['timeAgo'] ?? '');
+          DateTime timeB = _parseTimeAgo(b['timeAgo'] ?? '');
+          return timeB.compareTo(timeA);
+        });
       } else {
         print('Failed to load posts. Status code: ${response.statusCode}');
       }
     } catch (error) {
       print('Error fetching data: $error');
     } finally {
-      // 5. Turn off the loading state and rebuild the feed
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  // --- CUSTOM PARSER ---
+  // Converts strings like "3 hours ago" into real mathematical time
+  DateTime _parseTimeAgo(String timeAgo) {
+    final now = DateTime.now();
+    final parts = timeAgo.split(' ');
+
+    if (parts.isEmpty) return now;
+    final int value = int.tryParse(parts[0]) ?? 0;
+
+    if (timeAgo.contains('minute')) {
+      return now.subtract(Duration(minutes: value));
+    } else if (timeAgo.contains('hour')) {
+      return now.subtract(Duration(hours: value));
+    } else if (timeAgo.contains('day')) {
+      return now.subtract(Duration(days: value));
+    }
+
+    return now;
   }
 
   // Logic to upvote a post
@@ -57,13 +77,13 @@ class PostProvider extends ChangeNotifier {
     }
   }
 
-  // publish a brand new post
+  // Logic to publish a brand new post
   void addPost(String category, String content) {
     _posts.insert(0, {
       'id': DateTime.now().toString(),
-      'uploaderName': 'CS BANANA',
+      'uploaderName': 'Pai Zaw Bhone',
       'role': 'Student',
-      'timeAgo': 'Just now',
+      'timeAgo': 'Just now', // Displays instantly
       'category': category,
       'content': content,
       'upvotes': 0,
