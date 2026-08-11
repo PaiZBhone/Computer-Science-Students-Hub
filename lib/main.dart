@@ -5,13 +5,17 @@ import 'package:flutter_helloworld/splash_screen.dart';
 import 'add_post.dart';
 import 'profile_screen.dart';
 import 'notification.dart';
+import 'package:provider/provider.dart';
+import 'post_provider.dart';
 
-void main() => runApp(
-  const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: SplashScreen(),
-  ),
-);
+void main() {
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => PostProvider(),
+      child: const MaterialApp(home: SplashScreen()),
+    ),
+  );
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

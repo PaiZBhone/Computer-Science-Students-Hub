@@ -5,6 +5,7 @@ class PostProvider extends ChangeNotifier {
   //added 'id' to easily find exactly which post gets upvoted
   final List<Map<String, dynamic>> _posts = [
     {
+      'id': '1',
       'uploaderName': 'Dr. S John',
       'role': 'Lecturer',
       'timeAgo': '1 hour ago',
@@ -15,6 +16,7 @@ class PostProvider extends ChangeNotifier {
       'comments': 12,
     },
     {
+      'id': '2',
       'uploaderName': 'Larry',
       'role': 'Student',
       'timeAgo': '3 hours ago',
@@ -25,6 +27,7 @@ class PostProvider extends ChangeNotifier {
       'comments': 3,
     },
     {
+      'id': '3',
       'uploaderName': 'Hein Htet',
       'role': 'Student',
       'timeAgo': '3 hours ago',
@@ -35,17 +38,19 @@ class PostProvider extends ChangeNotifier {
       'comments': 3,
     },
     {
+      'id': '4',
       'uploaderName': 'Wathan Oo',
       'role': 'Student',
       'timeAgo': '3 hours ago',
-      'category': '📚 Academic',
+      'category': '🎮 Social',
       'content':
-          'Does anyone have a good visual guide for how the Buddy System memory allocation works? Struggling with this Computer Architecture concept.',
-      'upvotes': 8,
-      'comments': 3,
+          'Need a break from coding! Anyone want to queue up for some Counter-Strike 2 competitive matches tonight around 8 PM?',
+      'upvotes': 15,
+      'comments': 7,
     },
     {
-      'uploaderName': 'Htoo Aung Lwin',
+      'id': '5',
+      'uploaderName': 'Htoo Aung Lin',
       'role': 'Student',
       'timeAgo': '3 hours ago',
       'category': '📚 Academic',
@@ -55,6 +60,7 @@ class PostProvider extends ChangeNotifier {
       'comments': 3,
     },
     {
+      'id': '6',
       'uploaderName': 'Alex',
       'role': 'Student',
       'timeAgo': '5 hours ago',

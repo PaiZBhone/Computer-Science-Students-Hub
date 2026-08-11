@@ -91,11 +91,7 @@ class PostDetailScreen extends StatelessWidget {
                   'Student',
                   'This is really helpful, thanks for sharing!',
                 ),
-                _buildComment(
-                  'Larry',
-                  'Student',
-                  'Great question. Let us discuss this in the lab tomorrow.',
-                ),
+                _buildComment('Larry', 'Student', 'G bro!!. Im in'),
               ],
             ),
           ),
