@@ -27,10 +27,10 @@ class PostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. We wrap the entire Card in an InkWell to make it clickable
+    final isUpvoted = Provider.of<PostProvider>(context).hasUpvoted(id);
     return InkWell(
       onTap: () {
-        // 2. This is the navigation logic when the post is tapped
+        //This is the navigation logic when the post is tapped
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -115,18 +115,29 @@ class PostCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   TextButton.icon(
-                    // Call the upvote function from the provider when pressed!
                     onPressed: () {
                       Provider.of<PostProvider>(
                         context,
                         listen: false,
                       ).upvotePost(id);
                     },
-                    icon: const Icon(
-                      Icons.thumb_up_alt_outlined,
+                    icon: Icon(
+                      // If liked, use solid icon. If not, use outline icon.
+                      isUpvoted
+                          ? Icons.thumb_up
+                          : Icons.thumb_up_alt_outlined,
                       size: 20,
+                      color: isUpvoted ? Colors.blue : Colors.grey[700],
                     ),
-                    label: Text('$upvotes'),
+                    label: Text(
+                      '$upvotes',
+                      style: TextStyle(
+                        color: isUpvoted ? Colors.blue : Colors.grey[700],
+                        fontWeight: isUpvoted
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
                   ),
                   TextButton.icon(
                     onPressed: () {},

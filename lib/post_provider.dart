@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class PostProvider extends ChangeNotifier {
+  final Set<String> _upvotedPostIds = {};
+  bool hasUpvoted(String postId) => _upvotedPostIds.contains(postId);
   List<Map<String, dynamic>> _posts = [];
   bool _isLoading = false;
 
@@ -71,38 +73,40 @@ class PostProvider extends ChangeNotifier {
   }
 
   //upvote a post permanently
+  // Logic to upvote/remove upvote permanently
   Future<void> upvotePost(String postId) async {
-    // 1. Find  post in local list
     final index = _posts.indexWhere((post) => post['id'] == postId);
 
     if (index != -1) {
-      // 2. Optimistic UI update: increase the count instantly for a snappy feel
-      _posts[index]['upvotes'] += 1;
-      notifyListeners();
+      // TOGGLE LOGIC: If already liked, remove it. If not liked, add it.
+      if (_upvotedPostIds.contains(postId)) {
+        _posts[index]['upvotes'] -= 1;
+        _upvotedPostIds.remove(postId);
+      } else {
+        _posts[index]['upvotes'] += 1;
+        _upvotedPostIds.add(postId);
+      }
 
-      // 3. Save the new count
+      notifyListeners(); // Snappy UI update
+
+      // Sync the new count to the cloud
       try {
         final url = Uri.parse(
           'https://api.jsonbin.io/v3/b/6a7ae6bbf5f4af5e29065838',
-        );
+        ); // <-- Keep your URL
 
         final response = await http.put(
           url,
           headers: {
             'Content-Type': 'application/json',
             'X-Master-Key':
-                r'$2a$10$X2KX8JcpVTj3Fiuh89RuNu3XquTFjlQPrdqbYL6DBd7cFLuFkgZZW',
+                r'$2a$10$X2KX8JcpVTj3Fiuh89RuNu3XquTFjlQPrdqbYL6DBd7cFLuFkgZZW', // <-- Keep your Key
           },
-          body: json.encode({
-            'posts':
-                _posts, // Send the newly updated list back to the server
-          }),
+          body: json.encode({'posts': _posts}),
         );
 
         if (response.statusCode != 200) {
           print('Failed to sync upvote. Status: ${response.statusCode}');
-        } else {
-          print('Upvote permanently saved!');
         }
       } catch (error) {
         print('Error saving upvote: $error');
