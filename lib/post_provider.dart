@@ -14,8 +14,10 @@ class PostProvider extends ChangeNotifier {
   }
 
   Future<void> fetchPosts() async {
-    _isLoading = true;
-    notifyListeners();
+    if (_posts.isEmpty) {
+      _isLoading = true;
+      notifyListeners();
+    }
 
     try {
       final url = Uri.parse(
@@ -78,17 +80,52 @@ class PostProvider extends ChangeNotifier {
   }
 
   // Logic to publish a brand new post
-  void addPost(String category, String content) {
-    _posts.insert(0, {
+  // Logic to publish a brand new post permanently
+  Future<void> addPost(String category, String content) async {
+    // 1. Create the new post object
+    final newPost = {
       'id': DateTime.now().toString(),
+      'timestamp': DateTime.now().toIso8601String(),
       'uploaderName': 'Pai Zaw Bhone',
       'role': 'Student',
-      'timeAgo': 'Just now', // Displays instantly
+      'timeAgo': 'Just now',
       'category': category,
       'content': content,
       'upvotes': 0,
       'comments': 0,
-    });
+    };
+
+    // 2. Add it to the local list instantly so the UI feels incredibly fast (Optimistic UI updating)
+    _posts.insert(0, newPost);
     notifyListeners();
+
+    // 3. Save it to the cloud permanently
+    try {
+      final url = Uri.parse(
+        'https://api.jsonbin.io/v3/b/6a7ae6bbf5f4af5e29065838',
+      );
+
+      final response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key':
+              r'$2a$10$X2KX8JcpVTj3Fiuh89RuNu3XquTFjlQPrdqbYL6DBd7cFLuFkgZZW', // Paste your key here!
+        },
+        body: json.encode({
+          'posts':
+              _posts, // We send the entire updated list back to the server
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        print('Failed to save to cloud. Status: ${response.statusCode}');
+        print('Error details: ${response.body}');
+      } else {
+        print('Post successfully saved to the cloud!');
+      }
+    } catch (error) {
+      print('Error saving data: $error');
+    }
   }
 }
