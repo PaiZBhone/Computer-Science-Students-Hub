@@ -35,6 +35,7 @@ class PostCard extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (context) => PostDetailScreen(
+              id: id,
               uploaderName: uploaderName,
               role: role,
               category: category,

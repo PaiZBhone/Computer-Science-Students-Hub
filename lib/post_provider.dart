@@ -114,6 +114,36 @@ class PostProvider extends ChangeNotifier {
     }
   }
 
+  // Delete Function
+  Future<void> deletePost(String postId) async {
+    // 1. Remove the post from the local list instantly
+    _posts.removeWhere((post) => post['id'] == postId);
+    notifyListeners(); // Updates the UI to show it's gone
+
+    // 2. Sync the updated list (without the deleted post) to the cloud
+    try {
+      final url = Uri.parse(
+        'https://api.jsonbin.io/v3/b/6a7ae6bbf5f4af5e29065838',
+      );
+
+      final response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key':
+              r'$2a$10$X2KX8JcpVTj3Fiuh89RuNu3XquTFjlQPrdqbYL6DBd7cFLuFkgZZW',
+        },
+        body: json.encode({'posts': _posts}),
+      );
+
+      if (response.statusCode != 200) {
+        print('Failed to delete on cloud. Status: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error deleting post: $error');
+    }
+  }
+
   // Logic to publish a brand new post
   // Logic to publish a brand new post permanently
   Future<void> addPost(String category, String content) async {

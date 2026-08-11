@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'post_provider.dart';
+import 'package:provider/provider.dart';
 
 class PostDetailScreen extends StatelessWidget {
+  final String id;
   final String uploaderName;
   final String role;
   final String category;
@@ -9,6 +12,7 @@ class PostDetailScreen extends StatelessWidget {
 
   const PostDetailScreen({
     super.key,
+    required this.id,
     required this.uploaderName,
     required this.role,
     required this.category,
@@ -25,6 +29,54 @@ class PostDetailScreen extends StatelessWidget {
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          // Only show the delete button if it is your post!
+          if (uploaderName == 'Pai Zaw Bhone')
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              color: const Color.fromARGB(255, 184, 59, 50),
+              onPressed: () {
+                // Show a confirmation dialog before deleting
+                showDialog(
+                  context: context,
+                  builder: (BuildContext dialogContext) {
+                    return AlertDialog(
+                      title: const Text('Delete Post'),
+                      content: const Text(
+                        'Are you sure you want to permanently delete this post?',
+                      ),
+                      actions: [
+                        TextButton(
+                          child: const Text('Cancel', style: TextStyle()),
+                          onPressed: () =>
+                              Navigator.of(dialogContext).pop(),
+                        ),
+                        TextButton(
+                          child: const Text(
+                            'Delete',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                          onPressed: () {
+                            // 1. Close the dialog
+                            Navigator.of(dialogContext).pop();
+
+                            // 2. Tell the provider to delete it
+                            Provider.of<PostProvider>(
+                              context,
+                              listen: false,
+                            ).deletePost(id);
+
+                            // 3. Go back to the main feed
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+        ],
       ),
       body: Column(
         children: [
