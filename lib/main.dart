@@ -17,54 +17,71 @@ void main() {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  int _selectedIndex = 0;
+
+  final List<Widget> _screens = const [
+    Myhome(),
+    AddPostScreen(),
+    NotificationsScreen(),
+    ProfileScreen(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: DefaultTabController(
-        length: 4,
-        child: Scaffold(
-          appBar: AppBar(
-            title: const Text(
-              'College of DIT\n Computer Science Club',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.settings),
-                onPressed: () {},
-              ),
-            ],
-            backgroundColor: Colors.blue,
-            bottom: const TabBar(
-              tabs: [
-                Tab(icon: Icon(Icons.home)),
-                Tab(icon: Icon(Icons.add_box_rounded)),
-                Tab(icon: Icon(Icons.notifications)),
-                Tab(icon: Icon(Icons.account_box_rounded)),
-              ],
-            ),
-          ),
-          body: const TabBarView(
-            children: [
-              //Icon(Icons.home),
-              //Icon(Icons.add_box_rounded),
-              //Icon(Icons.notifications),
-              //Icon(Icons.account_box_rounded),
+      debugShowCheckedModeBanner: false, // Removes the debug banner
+      home: Scaffold(
+        // 4. The body dynamically changes based on the selected index
+        body: _screens[_selectedIndex],
 
-              //Text('Home'),
-              Myhome(),
-              AddPostScreen(),
-              NotificationsScreen(),
-              ProfileScreen(),
-            ],
-          ),
+        //The modern Bottom Navigation Bar
+        bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType
+              .fixed, // Prevents icons from shifting
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          selectedItemColor: Colors.blue,
+          unselectedItemColor: Colors.grey[600],
+          backgroundColor: Colors.white,
+          elevation: 8,
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.add_box_outlined),
+              activeIcon: Icon(Icons.add_box_rounded),
+              label: 'Post',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.notifications_none),
+              activeIcon: Icon(Icons.notifications),
+              label: 'Alerts',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.account_box_rounded),
+              label: 'Profile',
+            ),
+          ],
         ),
       ),
     );

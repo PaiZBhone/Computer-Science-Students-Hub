@@ -125,6 +125,31 @@ class _MyhomeState extends State<Myhome> {
               ).fetchPosts(),
               child: CustomScrollView(
                 slivers: [
+                  SliverAppBar(
+                    toolbarHeight: 70, // Matches your previous height
+                    floating: true, // Hides the bar when scrolling down
+                    snap:
+                        true, // Snaps it back into view when scrolling up
+                    backgroundColor: Colors.blue,
+                    elevation: 0,
+                    title: const Text(
+                      'College of DIT\n Computer Science Club',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    actions: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.settings,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {},
+                      ),
+                    ],
+                  ),
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
