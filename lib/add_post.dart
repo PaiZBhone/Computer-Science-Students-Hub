@@ -67,7 +67,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      //backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text('Create a Post'),
         backgroundColor: const Color.fromARGB(255, 41, 99, 165),

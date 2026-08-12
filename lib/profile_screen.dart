@@ -9,10 +9,10 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      //backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text('My Profile'),
-        backgroundColor: const Color.fromARGB(255, 41, 99, 165),
+        //backgroundColor: const Color.fromARGB(255, 41, 99, 165),
         foregroundColor: Colors.white,
         elevation: 0,
         // actions: [
@@ -24,7 +24,7 @@ class ProfileScreen extends StatelessWidget {
           // 1. Profile Header Section
           Container(
             width: double.infinity,
-            color: Colors.white,
+            //color: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 24.0),
             child: Column(
               children: [
@@ -65,7 +65,7 @@ class ProfileScreen extends StatelessWidget {
           // 2. User Activity Tabs (My Posts & Saved)
           Expanded(
             child: Container(
-              color: Colors.white,
+              //color: Colors.white,
               child: DefaultTabController(
                 length: 2,
                 child: Column(

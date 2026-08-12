@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_helloworld/post.dart';
 import 'package:provider/provider.dart';
 import 'post_provider.dart';
+import 'settting_screen.dart';
+import 'theme.dart';
 
 class Myhome extends StatefulWidget {
   const Myhome({super.key});
@@ -96,7 +98,7 @@ class _MyhomeState extends State<Myhome> {
   @override
   Widget build(BuildContext context) {
     final allPosts = Provider.of<PostProvider>(context).posts;
-
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     // Filter by BOTH Category and Search Query
     final displayedPosts = allPosts.where((post) {
       final matchesCategory =
@@ -115,7 +117,7 @@ class _MyhomeState extends State<Myhome> {
 
     return Scaffold(
       //backgroud feed color
-      backgroundColor: Colors.white,
+      //backgroundColor: Colors.white,
       body: Provider.of<PostProvider>(context).isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -132,12 +134,6 @@ class _MyhomeState extends State<Myhome> {
                     snap:
                         true, // Snaps it back into view when scrolling up
                     //backgroundColor: Colors.blue,
-                    backgroundColor: const Color.fromARGB(
-                      255,
-                      41,
-                      99,
-                      165,
-                    ),
                     elevation: 0,
                     title: const Text(
                       'College of DIT\n Computer Science Club',
@@ -153,7 +149,14 @@ class _MyhomeState extends State<Myhome> {
                           Icons.settings,
                           color: Colors.white,
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SettingsScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -162,6 +165,9 @@ class _MyhomeState extends State<Myhome> {
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                       child: TextField(
                         controller: _searchController,
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white : Colors.black,
+                        ),
                         onChanged: (value) {
                           // Every time the user types a letter, the screen updates!
                           setState(() {
@@ -190,7 +196,9 @@ class _MyhomeState extends State<Myhome> {
                                 )
                               : null,
                           filled: true,
-                          fillColor: Colors.white,
+                          fillColor: isDarkMode
+                              ? const Color(0xFF1E1E1E)
+                              : Colors.white,
                           contentPadding: const EdgeInsets.symmetric(
                             vertical: 0,
                           ),
@@ -258,15 +266,24 @@ class _MyhomeState extends State<Myhome> {
                                   selectedFilter = filter;
                                 });
                               },
+                              backgroundColor: isDarkMode
+                                  ? const Color(0xFF1E1E1E)
+                                  : Colors.grey[200],
                               selectedColor: Colors.blue.withOpacity(0.2),
                               labelStyle: TextStyle(
                                 color: selectedFilter == filter
-                                    ? Colors.blue[800]
-                                    : Colors.black87,
+                                    ? (isDarkMode
+                                          ? Colors.blue[300]
+                                          : Colors.blue[800])
+                                    : (isDarkMode
+                                          ? Colors.white70
+                                          : Colors.black87),
                                 fontWeight: selectedFilter == filter
                                     ? FontWeight.bold
                                     : FontWeight.normal,
                               ),
+                              // Optional: Remove the border for a cleaner modern look
+                              side: BorderSide.none,
                             ),
                           );
                         },

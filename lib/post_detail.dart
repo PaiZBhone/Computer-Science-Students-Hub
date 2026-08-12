@@ -23,10 +23,10 @@ class PostDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      //backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text('Post Details'),
-        backgroundColor: const Color.fromARGB(255, 41, 99, 165),
+        //backgroundColor: const Color.fromARGB(255, 41, 99, 165),
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -82,7 +82,7 @@ class PostDetailScreen extends StatelessWidget {
         children: [
           // 1.Post
           Container(
-            color: Colors.white,
+            //color: Colors.white,
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
