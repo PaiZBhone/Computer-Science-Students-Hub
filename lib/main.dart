@@ -65,7 +65,12 @@ class MainApp extends StatelessWidget {
         ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           backgroundColor: Color(0xFF1E1E1E),
-          selectedItemColor: Color(0xFF00E5FF), // Neon cyan for dark mode
+          selectedItemColor: const Color.fromARGB(
+            255,
+            41,
+            99,
+            165,
+          ), // Neon cyan for dark mode
           unselectedItemColor: Colors.grey,
         ),
       ),

@@ -70,7 +70,10 @@ class _AddPostScreenState extends State<AddPostScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create post'),
+        title: const Text(
+          'Create post',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         elevation: 0, // Flat design
         actions: [
           Padding(
