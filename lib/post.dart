@@ -60,7 +60,12 @@ class PostCard extends StatelessWidget {
               Row(
                 children: [
                   const CircleAvatar(
-                    backgroundColor: Colors.blueAccent,
+                    backgroundColor: const Color.fromARGB(
+                      255,
+                      41,
+                      99,
+                      165,
+                    ),
                     child: Icon(Icons.person, color: Colors.white),
                   ),
                   const SizedBox(width: 12),

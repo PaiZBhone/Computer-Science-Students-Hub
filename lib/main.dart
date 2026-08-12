@@ -45,7 +45,6 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false, // Removes the debug banner
       home: Scaffold(
-        // 4. The body dynamically changes based on the selected index
         body: _screens[_selectedIndex],
 
         //The modern Bottom Navigation Bar
@@ -54,7 +53,8 @@ class _MyAppState extends State<MyApp> {
               .fixed, // Prevents icons from shifting
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
-          selectedItemColor: Colors.blue,
+          //selectedItemColor: Colors.blue,
+          selectedItemColor: const Color.fromARGB(255, 41, 99, 165),
           unselectedItemColor: Colors.grey[600],
           backgroundColor: Colors.white,
           elevation: 8,

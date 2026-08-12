@@ -114,7 +114,8 @@ class _MyhomeState extends State<Myhome> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      //backgroud feed color
+      backgroundColor: Colors.white,
       body: Provider.of<PostProvider>(context).isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -130,7 +131,13 @@ class _MyhomeState extends State<Myhome> {
                     floating: true, // Hides the bar when scrolling down
                     snap:
                         true, // Snaps it back into view when scrolling up
-                    backgroundColor: Colors.blue,
+                    //backgroundColor: Colors.blue,
+                    backgroundColor: const Color.fromARGB(
+                      255,
+                      41,
+                      99,
+                      165,
+                    ),
                     elevation: 0,
                     title: const Text(
                       'College of DIT\n Computer Science Club',

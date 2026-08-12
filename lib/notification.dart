@@ -35,7 +35,7 @@ class NotificationsScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Notifications'),
-        backgroundColor: Colors.blue,
+        backgroundColor: const Color.fromARGB(255, 41, 99, 165),
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [

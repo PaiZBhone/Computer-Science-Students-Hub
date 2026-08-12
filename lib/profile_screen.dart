@@ -12,7 +12,7 @@ class ProfileScreen extends StatelessWidget {
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text('My Profile'),
-        backgroundColor: Colors.blue,
+        backgroundColor: const Color.fromARGB(255, 41, 99, 165),
         foregroundColor: Colors.white,
         elevation: 0,
         // actions: [
@@ -30,7 +30,7 @@ class ProfileScreen extends StatelessWidget {
               children: [
                 const CircleAvatar(
                   radius: 50,
-                  backgroundColor: Colors.blueAccent,
+                  backgroundColor: const Color.fromARGB(255, 41, 99, 165),
                   child: Icon(Icons.person, size: 50, color: Colors.white),
                 ),
                 const SizedBox(height: 16),

@@ -26,7 +26,7 @@ class PostDetailScreen extends StatelessWidget {
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text('Post Details'),
-        backgroundColor: Colors.blue,
+        backgroundColor: const Color.fromARGB(255, 41, 99, 165),
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -90,7 +90,12 @@ class PostDetailScreen extends StatelessWidget {
                 Row(
                   children: [
                     const CircleAvatar(
-                      backgroundColor: Colors.blueAccent,
+                      backgroundColor: const Color.fromARGB(
+                        255,
+                        41,
+                        99,
+                        165,
+                      ),
                       child: Icon(Icons.person, color: Colors.white),
                     ),
                     const SizedBox(width: 12),
@@ -170,7 +175,7 @@ class PostDetailScreen extends StatelessWidget {
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide(color: Colors.grey[300]!),
+                          borderSide: BorderSide(color: Colors.grey[200]!),
                         ),
                         filled: true,
                         fillColor: Colors.grey[100],
@@ -179,7 +184,12 @@ class PostDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   CircleAvatar(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: const Color.fromARGB(
+                      255,
+                      41,
+                      99,
+                      165,
+                    ),
                     child: IconButton(
                       icon: const Icon(
                         Icons.send,

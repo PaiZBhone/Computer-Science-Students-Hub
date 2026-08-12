@@ -70,7 +70,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text('Create a Post'),
-        backgroundColor: Colors.blue,
+        backgroundColor: const Color.fromARGB(255, 41, 99, 165),
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -126,7 +126,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
               height: 55,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: const Color.fromARGB(255, 41, 99, 165),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
