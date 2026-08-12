@@ -47,7 +47,12 @@ class SplashScreenState extends State<SplashScreen> {
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
-                color: Colors.blue, // Updated to match your app's theme
+                color: const Color.fromARGB(
+                  255,
+                  41,
+                  99,
+                  165,
+                ), // Updated to match your app's theme
               ),
             ),
           ],

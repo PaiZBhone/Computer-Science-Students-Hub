@@ -38,7 +38,11 @@ class LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // App Logo or Title
-                const Icon(Icons.school, size: 80, color: Colors.blue),
+                const Icon(
+                  Icons.school,
+                  size: 80,
+                  color: const Color.fromARGB(255, 41, 99, 165),
+                ),
                 const SizedBox(height: 16),
                 const Text(
                   'CS Student Hub',
@@ -100,7 +104,12 @@ class LoginScreenState extends State<LoginScreen> {
                   height: 50,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: const Color.fromARGB(
+                        255,
+                        41,
+                        99,
+                        165,
+                      ),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),

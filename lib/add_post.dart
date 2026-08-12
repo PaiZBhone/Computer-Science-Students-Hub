@@ -108,13 +108,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
               children: [
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor: isDarkMode
-                      ? Colors.grey[800]
-                      : Colors.blue.withOpacity(0.1),
-                  child: const Icon(
-                    Icons.person,
-                    color: Color.fromARGB(255, 41, 99, 165),
-                  ),
+                  backgroundColor: const Color.fromARGB(255, 41, 99, 165),
+                  child: const Icon(Icons.person, color: Colors.white),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
