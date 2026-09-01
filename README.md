@@ -1,4 +1,4 @@
-# the_matriX
+# CS_Student_Hub
 
 The application includes the following main features:
 
