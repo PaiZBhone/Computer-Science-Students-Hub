@@ -8,6 +8,9 @@ The application includes the following main features:
 ~ Notifications Tab: Keeps students updated with important activities such as assignment deadlines, upcoming exams, events, and interactions with their posts.
 ~ Student Community: Provides a space specifically for Computer Science students to socialize, make friends, share experiences, discuss their studies, and have fun together in a community similar to a small-scale social media platform.
 
+~Main Theme Color
+Color.fromARGB(255,41,99,165,),
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
