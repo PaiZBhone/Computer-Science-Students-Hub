@@ -14,6 +14,7 @@ import 'package:phosphor_icons/phosphor_icons.dart';
 
 void main() {
   runApp(
+    //testing command
     // 1. MultiProvider allows us to inject both Post data and Theme data globally
     MultiProvider(
       providers: [
