@@ -40,40 +40,22 @@ class MainApp extends StatelessWidget {
       // --- LIGHT THEME SETTINGS ---
       theme: ThemeData(
         brightness: Brightness.light,
+        //feed color
         scaffoldBackgroundColor: const Color(0xFFF4F4F8),
         appBarTheme: const AppBarTheme(
           backgroundColor: const Color.fromARGB(255, 41, 99, 165),
           foregroundColor: Colors.white,
-        ),
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: Colors.white,
-          selectedItemColor: Color.fromARGB(
-            255,
-            41,
-            99,
-            165,
-          ), // custom blue
-          unselectedItemColor: Colors.grey,
         ),
       ),
 
       // --- DARK THEME SETTINGS ---
       darkTheme: ThemeData(
         brightness: Brightness.dark,
+        //feed color
         scaffoldBackgroundColor: const Color(0xFF121212),
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFF1E1E1E),
           foregroundColor: Colors.white,
-        ),
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: Color(0xFF1E1E1E),
-          selectedItemColor: const Color.fromARGB(
-            255,
-            41,
-            99,
-            165,
-          ), // Neon cyan for dark mode
-          unselectedItemColor: Colors.grey,
         ),
       ),
 
@@ -109,39 +91,100 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _screens[_selectedIndex],
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-      // The modern Bottom Navigation Bar (Colors are now controlled by the ThemeData above!)
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        elevation: 8,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(LucideIcons.house),
-            activeIcon: Icon(LucideIcons.house500),
-            label: 'Home',
+    return Scaffold(
+      extendBody:
+          true, // Allows the feed to scroll behind the floating bar
+      body: _screens[_selectedIndex],
+      //pill shape nevigation
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+          child: Container(
+            height: 62,
+            decoration: BoxDecoration(
+              // Negv Color
+              color: isDarkMode
+                  ? const Color.fromARGB(255, 34, 34, 34)
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(35),
+              boxShadow: [
+                BoxShadow(
+                  color: isDarkMode
+                      ? Colors.black.withOpacity(0.3)
+                      : Colors.black.withOpacity(0.15),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+              border: Border.all(
+                color: isDarkMode ? Colors.white10 : Colors.grey[200]!,
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildNavItem(
+                  0,
+                  LucideIcons.house,
+                  LucideIcons.house500,
+                  isDarkMode,
+                ),
+                _buildNavItem(
+                  1,
+                  LucideIcons.plus,
+                  LucideIcons.plus500,
+                  isDarkMode,
+                ),
+                _buildNavItem(
+                  2,
+                  LucideIcons.bell,
+                  LucideIcons.bell500,
+                  isDarkMode,
+                ),
+                _buildNavItem(
+                  3,
+                  LucideIcons.user,
+                  LucideIcons.user500,
+                  isDarkMode,
+                ),
+              ],
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(LucideIcons.plus),
-            activeIcon: Icon(LucideIcons.plus500),
-            label: 'Post',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(LucideIcons.bell),
-            activeIcon: Icon(LucideIcons.bell500),
-            label: 'Alerts',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(LucideIcons.user),
-            activeIcon: Icon(LucideIcons.user500),
-            label: 'Profile',
-          ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(
+    int index,
+    IconData unselectedIcon,
+    IconData selectedIcon,
+    bool isDarkMode,
+  ) {
+    final isSelected = _selectedIndex == index;
+
+    return InkWell(
+      onTap: () => _onItemTapped(index),
+      borderRadius: BorderRadius.circular(25),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          // Set to transparent so the background highlight is completely removed
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(25),
+        ),
+        child: Icon(
+          isSelected ? selectedIcon : unselectedIcon,
+          size: 24,
+
+          color: isSelected
+              ? const Color.fromARGB(255, 41, 99, 165)
+              : (isDarkMode ? Colors.grey[400] : Colors.grey[600]),
+        ),
       ),
     );
   }

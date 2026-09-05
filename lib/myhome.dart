@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'post_provider.dart';
 import 'settting_screen.dart';
 import 'theme.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 class Myhome extends StatefulWidget {
   const Myhome({super.key});
@@ -30,70 +31,6 @@ class _MyhomeState extends State<Myhome> {
     '👽 Random',
     '🌧️ Weather',
   ];
-
-  // 3. Virtual dummy posts
-  // final List<Map<String, dynamic>> allPosts = [
-  //   {
-  //     'uploaderName': 'Dr. S John',
-  //     'role': 'Lecturer',
-  //     'timeAgo': '1 hour ago',
-  //     'category': '📌 Announcements',
-  //     'content':
-  //         'Attention Students: The Object-Oriented Programming midterm grades have been posted. Please check the portal. We will review the Java practical questions in tomorrow\'s lecture.',
-  //     'upvotes': 45,
-  //     'comments': 12,
-  //   },
-  //   {
-  //     'uploaderName': 'Larry',
-  //     'role': 'Student',
-  //     'timeAgo': '3 hours ago',
-  //     'category': '📚 Academic',
-  //     'content':
-  //         'Does anyone have a good visual guide for how the Buddy System memory allocation works? Struggling with this Computer Architecture concept.',
-  //     'upvotes': 8,
-  //     'comments': 3,
-  //   },
-  //   {
-  //     'uploaderName': 'Hein Htet',
-  //     'role': 'Student',
-  //     'timeAgo': '3 hours ago',
-  //     'category': '📚 Academic',
-  //     'content':
-  //         'Does anyone have a good visual guide for how the Buddy System memory allocation works? Struggling with this Computer Architecture concept.',
-  //     'upvotes': 8,
-  //     'comments': 3,
-  //   },
-  //   {
-  //     'uploaderName': 'Wathan Oo',
-  //     'role': 'Student',
-  //     'timeAgo': '3 hours ago',
-  //     'category': '📚 Academic',
-  //     'content':
-  //         'Does anyone have a good visual guide for how the Buddy System memory allocation works? Struggling with this Computer Architecture concept.',
-  //     'upvotes': 8,
-  //     'comments': 3,
-  //   },
-  //   {
-  //     'uploaderName': 'Htoo Aung Lwin',
-  //     'role': 'Student',
-  //     'timeAgo': '3 hours ago',
-  //     'category': '📚 Academic',
-  //     'content':
-  //         'Does anyone have a good visual guide for how the Buddy System memory allocation works? Struggling with this Computer Architecture concept.',
-  //     'upvotes': 8,
-  //     'comments': 3,
-  //   },
-  //   {
-  //     'uploaderName': 'Alex',
-  //     'role': 'Student',
-  //     'timeAgo': '5 hours ago',
-  //     'category': '🎮 Social',
-  //     'content':
-  //         'Need a break from coding! Anyone want to queue up for some Counter-Strike 2 competitive matches tonight around 8 PM?',
-  //     'upvotes': 15,
-  //     'comments': 7,
-  //   },
-  // ];
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +114,8 @@ class _MyhomeState extends State<Myhome> {
                         decoration: InputDecoration(
                           hintText: 'Search posts or users...',
                           prefixIcon: const Icon(
-                            Icons.search,
+                            PhosphorIconsRegular.magnifyingGlass,
+                            size: 22,
                             color: Colors.grey,
                           ),
                           // Show a clear 'X' button only if there is text
@@ -197,7 +135,8 @@ class _MyhomeState extends State<Myhome> {
                               : null,
                           filled: true,
                           fillColor: isDarkMode
-                              ? const Color(0xFF1E1E1E)
+                              //searchbar color
+                              ? const Color.fromARGB(255, 34, 34, 34)
                               : Colors.white,
                           contentPadding: const EdgeInsets.symmetric(
                             vertical: 0,
@@ -208,39 +147,24 @@ class _MyhomeState extends State<Myhome> {
                               color: Colors.grey[300]!,
                             ),
                           ),
+                          //searchbar bordercolor
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
                             borderSide: BorderSide(
-                              color: Colors.grey[300]!,
+                              color: isDarkMode
+                                  ? const Color.fromARGB(255, 34, 34, 34)
+                                  : const Color.fromARGB(
+                                      255,
+                                      201,
+                                      198,
+                                      198,
+                                    ),
                             ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                  // const SliverAppBar(
-                  //   backgroundColor: Colors.blue,
-                  //   expandedHeight: 120.0,
-                  //   floating: true,
-                  //   pinned: true,
-                  //   flexibleSpace: FlexibleSpaceBar(
-                  //     title: Text(
-                  //       'Department Feed',
-                  //       style: TextStyle(
-                  //         color: Colors.white,
-                  //         fontWeight: FontWeight.bold,
-                  //         fontSize: 18,
-                  //       ),
-                  //     ),
-                  //     background: Padding(
-                  //       padding: EdgeInsets.only(top: 40.0, left: 16.0),
-                  //       child: Text(
-                  //         'College of Digital\nInnovation Technology',
-                  //         style: TextStyle(color: Colors.white70, fontSize: 16),
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
 
                   // 5. The new Filter Chips Section
                   SliverToBoxAdapter(
@@ -261,7 +185,6 @@ class _MyhomeState extends State<Myhome> {
                               label: Text(filter),
                               selected: selectedFilter == filter,
                               onSelected: (bool selected) {
-                                // setState tells Flutter to rebuild the screen with the new filter
                                 setState(() {
                                   selectedFilter = filter;
                                 });

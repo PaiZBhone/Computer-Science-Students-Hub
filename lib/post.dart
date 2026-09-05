@@ -33,9 +33,10 @@ class PostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUpvoted = Provider.of<PostProvider>(context).hasUpvoted(id);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: () {
-        //This is the navigation logic when the post is tapped
+        //navigation logic when the post is tapped
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -51,6 +52,10 @@ class PostCard extends StatelessWidget {
         );
       },
       child: Card(
+        //post color
+        color: isDarkMode
+            ? const Color.fromARGB(255, 30, 30, 30)
+            : Colors.white,
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         elevation: 2,
         shape: RoundedRectangleBorder(
@@ -78,6 +83,7 @@ class PostCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        //text size
                         Text(
                           uploaderName,
                           style: const TextStyle(
@@ -106,7 +112,10 @@ class PostCard extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(PhosphorIconsFill.dotsThreeOutline),
+                    icon: const Icon(
+                      PhosphorIconsFill.dotsThreeOutline,
+                      color: Color.fromARGB(255, 97, 97, 97),
+                    ),
                     onPressed: () {},
                   ),
                 ],
