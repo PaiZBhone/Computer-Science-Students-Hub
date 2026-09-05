@@ -129,6 +129,7 @@ class ProfileScreen extends StatelessWidget {
                                     content: post['content'],
                                     upvotes: post['upvotes'],
                                     comments: post['comments'],
+                                    share: post['share'],
                                   );
                                 },
                               );

@@ -158,6 +158,7 @@ class PostProvider extends ChangeNotifier {
       'content': content,
       'upvotes': 0,
       'comments': 0,
+      'share': 0,
     };
 
     // 2. Add it to the local list instantly so the UI feels incredibly fast (Optimistic UI updating)

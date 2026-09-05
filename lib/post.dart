@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 import 'post_detail.dart';
 import 'package:provider/provider.dart';
 import 'post_provider.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 class PostCard extends StatelessWidget {
   final String id;
@@ -12,6 +15,7 @@ class PostCard extends StatelessWidget {
   final String content;
   final int upvotes;
   final int comments;
+  final int share;
 
   const PostCard({
     super.key,
@@ -23,6 +27,7 @@ class PostCard extends StatelessWidget {
     required this.content,
     required this.upvotes,
     required this.comments,
+    required this.share,
   });
 
   @override
@@ -101,7 +106,7 @@ class PostCard extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.more_horiz),
+                    icon: const Icon(PhosphorIconsFill.dotsThreeOutline),
                     onPressed: () {},
                   ),
                 ],
@@ -130,8 +135,8 @@ class PostCard extends StatelessWidget {
                     icon: Icon(
                       // If liked, use solid icon. If not, use outline icon.
                       isUpvoted
-                          ? Icons.thumb_up
-                          : Icons.thumb_up_alt_outlined,
+                          ? PhosphorIconsFill.heart
+                          : PhosphorIconsRegular.heart,
                       size: 20,
                       color: isUpvoted ? Colors.blue : Colors.grey[700],
                     ),
@@ -147,13 +152,31 @@ class PostCard extends StatelessWidget {
                   ),
                   TextButton.icon(
                     onPressed: () {},
-                    icon: const Icon(Icons.comment_outlined, size: 20),
-                    label: Text('$comments'),
+                    icon: const Icon(
+                      PhosphorIconsFill.chatCircleDots,
+                      size: 20,
+                      color: Color.fromARGB(255, 97, 97, 97),
+                    ),
+                    label: Text(
+                      '$comments',
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 97, 97, 97),
+                      ),
+                    ),
                   ),
                   TextButton.icon(
                     onPressed: () {},
-                    icon: const Icon(Icons.share, size: 20),
-                    label: const Text('Share'),
+                    icon: const Icon(
+                      PhosphorIconsFill.arrowBendUpRight,
+                      size: 20,
+                      color: Color.fromARGB(255, 97, 97, 97),
+                    ),
+                    label: Text(
+                      '$share',
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 97, 97, 97),
+                      ),
+                    ),
                   ),
                 ],
               ),

@@ -8,7 +8,9 @@ import 'notification.dart';
 import 'package:provider/provider.dart';
 import 'post_provider.dart';
 import 'theme.dart';
-import 'settting_screen.dart'; // Make sure this points to your ThemeProvider file!
+import 'settting_screen.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 void main() {
   runApp(
@@ -50,7 +52,7 @@ class MainApp extends StatelessWidget {
             41,
             99,
             165,
-          ), // Your custom blue
+          ), // custom blue
           unselectedItemColor: Colors.grey,
         ),
       ),
@@ -120,23 +122,23 @@ class _MyAppState extends State<MyApp> {
         showUnselectedLabels: false,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
+            icon: Icon(LucideIcons.house),
+            activeIcon: Icon(LucideIcons.house500),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.add_box_outlined),
-            activeIcon: Icon(Icons.add_box_rounded),
+            icon: Icon(LucideIcons.plus),
+            activeIcon: Icon(LucideIcons.plus500),
             label: 'Post',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.notifications_none),
-            activeIcon: Icon(Icons.notifications),
+            icon: Icon(LucideIcons.bell),
+            activeIcon: Icon(LucideIcons.bell500),
             label: 'Alerts',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.account_box_rounded),
+            icon: Icon(LucideIcons.user),
+            activeIcon: Icon(LucideIcons.user500),
             label: 'Profile',
           ),
         ],
