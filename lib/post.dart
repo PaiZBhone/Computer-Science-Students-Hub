@@ -130,7 +130,7 @@ class PostCard extends StatelessWidget {
               const SizedBox(height: 16),
               const Divider(height: 1, thickness: 1),
 
-              // Action Bar: Upvote, Comment, Share
+              //Upvote, Comment, Share
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -161,31 +161,35 @@ class PostCard extends StatelessWidget {
                   ),
                   TextButton.icon(
                     onPressed: () {},
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color.fromARGB(
+                        255,
+                        97,
+                        97,
+                        97,
+                      ), // Stops the purple splash
+                    ),
                     icon: const Icon(
                       PhosphorIconsFill.chatCircleDots,
                       size: 20,
-                      color: Color.fromARGB(255, 97, 97, 97),
                     ),
-                    label: Text(
-                      '$comments',
-                      style: TextStyle(
-                        color: Color.fromARGB(255, 97, 97, 97),
-                      ),
-                    ),
+                    label: Text('$comments', style: TextStyle()),
                   ),
                   TextButton.icon(
                     onPressed: () {},
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color.fromARGB(
+                        255,
+                        97,
+                        97,
+                        97,
+                      ), // Stops the purple splash
+                    ),
                     icon: const Icon(
                       PhosphorIconsFill.arrowBendUpRight,
                       size: 20,
-                      color: Color.fromARGB(255, 97, 97, 97),
                     ),
-                    label: Text(
-                      '$share',
-                      style: TextStyle(
-                        color: Color.fromARGB(255, 97, 97, 97),
-                      ),
-                    ),
+                    label: Text('$share', style: TextStyle()),
                   ),
                 ],
               ),
