@@ -228,6 +228,7 @@ class _MyhomeState extends State<Myhome> {
                         category: post['category'],
                         timeAgo: post['timeAgo'],
                         content: post['content'],
+                        imageUrl: post['imageUrl'],
                         upvotes: post['upvotes'],
                         comments: post['comments'],
                         share: post['share'],

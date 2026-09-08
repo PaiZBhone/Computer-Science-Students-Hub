@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_helloworld/main.dart';
-import 'sign_up.dart';
+import 'sign_up.dart'; // Change to sign_up_3.dart if that is your current file name
+import 'package:supabase_flutter/supabase_flutter.dart'; // 1. Added Supabase import
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,13 +18,60 @@ class LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController =
       TextEditingController();
 
-  void _handleLogin() {
+  // 2. Added Supabase client and loading state
+  final supabase = Supabase.instance.client;
+  bool _isLoading = false;
+
+  // 3. Updated function to handle secure database login
+  Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
-      // If the form is valid, navigate to the main app interface
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const MyApp()));
+      setState(() {
+        _isLoading = true; // Show loading spinner
+      });
+
+      try {
+        // Authenticate with Supabase
+        await supabase.auth.signInWithPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+
+        // If successful, navigate to the main app interface
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const MyApp()),
+          );
+        }
+      } on AuthException catch (e) {
+        // Handle incorrect passwords or unknown emails
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(e.message)));
+        }
+      } catch (e) {
+        // Handle network errors, etc.
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${e.toString()}')),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false; // Hide loading spinner
+          });
+        }
+      }
     }
+  }
+
+  // Always dispose controllers to prevent memory leaks
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -42,7 +90,7 @@ class LoginScreenState extends State<LoginScreen> {
                 const Icon(
                   Icons.school,
                   size: 80,
-                  color: const Color.fromARGB(255, 41, 99, 165),
+                  color: Color.fromARGB(255, 41, 99, 165),
                 ),
                 const SizedBox(height: 16),
                 const Text(
@@ -116,16 +164,30 @@ class LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    onPressed: _handleLogin,
-                    child: const Text(
-                      'Login',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    // Disable button while loading
+                    onPressed: _isLoading ? null : _handleLogin,
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Login',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
+                const SizedBox(
+                  height: 16,
+                ), // Added a little spacing here for visual balance
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

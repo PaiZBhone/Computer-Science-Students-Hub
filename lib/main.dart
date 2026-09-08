@@ -19,7 +19,7 @@ void main() async {
 
   // the Supabase connection
   await Supabase.initialize(
-    url: 'https://xvqukjmxicwxmqjyzkoz.supabase.co/rest/v1/',
+    url: 'https://xvqukjmxicwxmqjyzkoz.supabase.co',
     anonKey: 'sb_publishable_NS7sWRbh_R1DFJxFxsDAQg_y_C0YI_N',
   );
 

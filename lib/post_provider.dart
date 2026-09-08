@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PostProvider extends ChangeNotifier {
   final Set<String> _upvotedPostIds = {};
   bool hasUpvoted(String postId) => _upvotedPostIds.contains(postId);
+
   List<Map<String, dynamic>> _posts = [];
   bool _isLoading = false;
 
   List<Map<String, dynamic>> get posts => _posts;
   bool get isLoading => _isLoading;
 
+  // Create the Supabase client
+  final supabase = Supabase.instance.client;
+
   PostProvider() {
     fetchPosts();
   }
 
+  // --- 1. FETCH POSTS FROM SUPABASE ---
   Future<void> fetchPosts() async {
     if (_posts.isEmpty) {
       _isLoading = true;
@@ -22,176 +26,159 @@ class PostProvider extends ChangeNotifier {
     }
 
     try {
-      final url = Uri.parse(
-        'https://api.jsonbin.io/v3/b/6a7ae6bbf5f4af5e29065838',
-      );
-      final response = await http.get(url);
+      // Query the posts table and JOIN the profiles table using the explicit foreign key hint
+      final response = await supabase
+          .from('posts')
+          .select('*, profiles!posts_author_id_fkey(full_name, role)')
+          .order(
+            'created_at',
+            ascending: false,
+          ); // Sort newest first automatically
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final List<dynamic> loadedPosts = data['record']['posts'];
+      final List<dynamic> data = response;
 
-        _posts = loadedPosts
-            .map((post) => post as Map<String, dynamic>)
-            .toList();
+      _posts = data.map((item) {
+        final profile = item['profiles'] ?? {};
 
-        // Sorting the post with custom time parser
-        _posts.sort((a, b) {
-          DateTime timeA = _parseTimeAgo(a['timeAgo'] ?? '');
-          DateTime timeB = _parseTimeAgo(b['timeAgo'] ?? '');
-          return timeB.compareTo(timeA);
-        });
-      } else {
-        print('Failed to load posts. Status code: ${response.statusCode}');
-      }
+        return {
+          'id': item['id'].toString(),
+          'uploaderName': profile['full_name'] ?? 'Unknown User',
+          'role': profile['role'] ?? 'Student',
+          'category': item['category'] ?? 'General',
+          'content': item['content'] ?? '',
+          'imageUrl': item['image_url'], // Optional image support
+          'timeAgo': _calculateTimeAgo(item['created_at']),
+          'upvotes': 0, // We will calculate true upvotes in a later step
+          'comments': 0,
+          'share': 0,
+        };
+      }).toList();
     } catch (error) {
-      print('Error fetching data: $error');
+      print('Error fetching data from Supabase: $error');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  // --- CUSTOM PARSER ---
-  // Converts strings like "3 hours ago" into real mathematical time
-  DateTime _parseTimeAgo(String timeAgo) {
+  // --- CUSTOM TIME PARSER ---
+  String _calculateTimeAgo(String? timestamp) {
+    if (timestamp == null) return 'Just now';
+
+    final postDate = DateTime.parse(timestamp).toLocal();
     final now = DateTime.now();
-    final parts = timeAgo.split(' ');
+    final difference = now.difference(postDate);
 
-    if (parts.isEmpty) return now;
-    final int value = int.tryParse(parts[0]) ?? 0;
-
-    if (timeAgo.contains('minute')) {
-      return now.subtract(Duration(minutes: value));
-    } else if (timeAgo.contains('hour')) {
-      return now.subtract(Duration(hours: value));
-    } else if (timeAgo.contains('day')) {
-      return now.subtract(Duration(days: value));
+    if (difference.inDays > 7) {
+      return '${postDate.day}/${postDate.month}/${postDate.year}';
+    } else if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
     }
-
-    return now;
   }
 
-  //upvote a post permanently
-  // Logic to upvote/remove upvote permanently
+  // --- 2. UPVOTE POST ---
   Future<void> upvotePost(String postId) async {
     final index = _posts.indexWhere((post) => post['id'] == postId);
+    if (index == -1) return;
 
-    if (index != -1) {
-      // TOGGLE LOGIC: If already liked, remove it. If not liked, add it.
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return; // Must be logged in
+
+    try {
       if (_upvotedPostIds.contains(postId)) {
+        // REMOVE UPVOTE
         _posts[index]['upvotes'] -= 1;
         _upvotedPostIds.remove(postId);
+        notifyListeners(); // Optimistic UI update
+
+        await supabase.from('upvotes').delete().match({
+          'post_id': postId,
+          'user_id': userId,
+        });
       } else {
+        // ADD UPVOTE
         _posts[index]['upvotes'] += 1;
         _upvotedPostIds.add(postId);
+        notifyListeners(); // Optimistic UI update
+
+        await supabase.from('upvotes').insert({
+          'post_id': postId,
+          'user_id': userId,
+        });
       }
-
-      notifyListeners(); // Snappy UI update
-
-      // Sync the new count to the cloud
-      try {
-        final url = Uri.parse(
-          'https://api.jsonbin.io/v3/b/6a7ae6bbf5f4af5e29065838',
-        ); // <-- Keep your URL
-
-        final response = await http.put(
-          url,
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Master-Key':
-                r'$2a$10$X2KX8JcpVTj3Fiuh89RuNu3XquTFjlQPrdqbYL6DBd7cFLuFkgZZW', // <-- Keep your Key
-          },
-          body: json.encode({'posts': _posts}),
-        );
-
-        if (response.statusCode != 200) {
-          print('Failed to sync upvote. Status: ${response.statusCode}');
-        }
-      } catch (error) {
-        print('Error saving upvote: $error');
-      }
+    } catch (error) {
+      print('Error toggling upvote: $error');
+      // Ideally, revert the UI change here if the database fails
     }
   }
 
-  // Delete Function
+  // --- 3. DELETE POST ---
   Future<void> deletePost(String postId) async {
-    // 1. Remove the post from the local list instantly
+    // 1. Remove instantly from UI
     _posts.removeWhere((post) => post['id'] == postId);
-    notifyListeners(); // Updates the UI to show it's gone
+    notifyListeners();
 
-    // 2. Sync the updated list (without the deleted post) to the cloud
+    // 2. Delete permanently from Supabase
     try {
-      final url = Uri.parse(
-        'https://api.jsonbin.io/v3/b/6a7ae6bbf5f4af5e29065838',
-      );
-
-      final response = await http.put(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Master-Key':
-              r'$2a$10$X2KX8JcpVTj3Fiuh89RuNu3XquTFjlQPrdqbYL6DBd7cFLuFkgZZW',
-        },
-        body: json.encode({'posts': _posts}),
-      );
-
-      if (response.statusCode != 200) {
-        print('Failed to delete on cloud. Status: ${response.statusCode}');
-      }
+      await supabase.from('posts').delete().eq('id', postId);
+      print('Post deleted successfully');
     } catch (error) {
       print('Error deleting post: $error');
     }
   }
 
-  // Logic to publish a brand new post
-  // Logic to publish a brand new post permanently
-  Future<void> addPost(String category, String content) async {
-    // 1. Create the new post object
-    final newPost = {
-      'id': DateTime.now().toString(),
-      'timestamp': DateTime.now().toIso8601String(),
-      'uploaderName': 'Pai Zaw Bhone',
-      'role': 'Student',
-      'timeAgo': 'Just now',
-      'category': category,
-      'content': content,
-      'upvotes': 0,
-      'comments': 0,
-      'share': 0,
-    };
+  // --- 4. ADD BRAND NEW POST ---
+  Future<void> addPost(
+    String category,
+    String content, {
+    String? imageUrl,
+  }) async {
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      print('Must be logged in to post');
+      return;
+    }
 
-    // 2. Add it to the local list instantly so the UI feels incredibly fast (Optimistic UI updating)
-    _posts.insert(0, newPost);
-    notifyListeners();
-
-    // 3. Save it to the cloud permanently
     try {
-      final url = Uri.parse(
-        'https://api.jsonbin.io/v3/b/6a7ae6bbf5f4af5e29065838',
-      );
+      // Insert into Supabase
+      final response = await supabase
+          .from('posts')
+          .insert({
+            'author_id': user.id, // Links directly to the logged-in user
+            'content': content,
+            'category': category,
+            'image_url': imageUrl, // Will be null if no image is provided
+          })
+          .select('*, profiles!posts_author_id_fkey(full_name, role)')
+          .single();
 
-      final response = await http.put(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Master-Key':
-              r'$2a$10$X2KX8JcpVTj3Fiuh89RuNu3XquTFjlQPrdqbYL6DBd7cFLuFkgZZW', // Paste your key here!
-        },
-        body: json.encode({
-          'posts':
-              _posts, // We send the entire updated list back to the server
-        }),
-      );
+      // Format the returned data to instantly match the UI
+      final profile = response['profiles'] ?? {};
+      final newPost = {
+        'id': response['id'].toString(),
+        'uploaderName': profile['full_name'] ?? 'Unknown User',
+        'role': profile['role'] ?? 'Student',
+        'category': response['category'] ?? 'General',
+        'content': response['content'] ?? '',
+        'imageUrl': response['image_url'],
+        'timeAgo': 'Just now',
+        'upvotes': 0,
+        'comments': 0,
+        'share': 0,
+      };
 
-      if (response.statusCode != 200) {
-        print('Failed to save to cloud. Status: ${response.statusCode}');
-        print('Error details: ${response.body}');
-      } else {
-        print('Post successfully saved to the cloud!');
-      }
+      // Insert at the top of the feed and update UI
+      _posts.insert(0, newPost);
+      notifyListeners();
+      print('Post successfully saved to Supabase!');
     } catch (error) {
-      print('Error saving data: $error');
+      print('Error saving post: $error');
     }
   }
 }

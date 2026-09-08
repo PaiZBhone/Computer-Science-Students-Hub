@@ -11,6 +11,7 @@ class PostCard extends StatelessWidget {
   final String role;
   final String timeAgo;
   final String content;
+  final String? imageUrl; // NEW: Optional image link property
   final int upvotes;
   final int comments;
   final int share;
@@ -23,6 +24,7 @@ class PostCard extends StatelessWidget {
     required this.role,
     required this.timeAgo,
     required this.content,
+    this.imageUrl, // Added to constructor
     required this.upvotes,
     required this.comments,
     required this.share,
@@ -107,16 +109,11 @@ class PostCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header: Avatar, Name, Role, Category(added new), Options
+              // Header: Avatar, Name, Role, Category, Options
               Row(
                 children: [
                   const CircleAvatar(
-                    backgroundColor: const Color.fromARGB(
-                      255,
-                      41,
-                      99,
-                      165,
-                    ),
+                    backgroundColor: Color.fromARGB(255, 41, 99, 165),
                     child: Icon(Icons.person, color: Colors.white),
                   ),
                   const SizedBox(width: 12),
@@ -124,7 +121,6 @@ class PostCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        //text size
                         Text(
                           uploaderName,
                           style: const TextStyle(
@@ -134,7 +130,7 @@ class PostCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
 
-                        //Badge
+                        //Badge & Time
                         Row(
                           children: [
                             _buildRoleBadge(role, isDarkMode),
@@ -153,8 +149,7 @@ class PostCard extends StatelessWidget {
                         Text(
                           category,
                           style: TextStyle(
-                            color:
-                                Colors.blue[700], // Makes the category pop
+                            color: Colors.blue[700],
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
@@ -178,10 +173,37 @@ class PostCard extends StatelessWidget {
                 content,
                 style: const TextStyle(fontSize: 15, height: 1.4),
               ),
+
+              // --- NEW: Render Image if available ---
+              if (imageUrl != null && imageUrl!.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    imageUrl!,
+                    width: double.infinity,
+                    height: 220,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        height: 220,
+                        color: Colors.grey[200],
+                        child: const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) =>
+                        const SizedBox.shrink(),
+                  ),
+                ),
+              ],
+
               const SizedBox(height: 16),
               const Divider(height: 1, thickness: 1),
 
-              //Upvote, Comment, Share
+              // Upvote, Comment, Share
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -193,7 +215,6 @@ class PostCard extends StatelessWidget {
                       ).upvotePost(id);
                     },
                     icon: Icon(
-                      // If liked, use solid icon. If not, use outline icon.
                       isUpvoted
                           ? PhosphorIconsFill.heart
                           : PhosphorIconsRegular.heart,
