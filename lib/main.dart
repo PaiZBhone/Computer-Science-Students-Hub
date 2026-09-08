@@ -11,10 +11,21 @@ import 'theme.dart';
 import 'settting_screen.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
+void main() async {
+  // Ensure Flutter is completely booted up before connecting to the database
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // the Supabase connection
+  await Supabase.initialize(
+    url: 'https://xvqukjmxicwxmqjyzkoz.supabase.co/rest/v1/',
+    anonKey: 'sb_publishable_NS7sWRbh_R1DFJxFxsDAQg_y_C0YI_N',
+  );
+
+  // 3. Run your app normally
   runApp(
-    // 1. MultiProvider allows us to inject both Post data and Theme data globally
+    // MultiProvider allows us to inject both Post data and Theme data globally
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => PostProvider()),

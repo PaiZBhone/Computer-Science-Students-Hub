@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; // Add Supabase import
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -10,25 +11,106 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  bool _obscurePassword = true;
+  // Controllers to grab the text from the input boxes
+  final _displayNameController = TextEditingController();
+  final _fullNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _idController = TextEditingController();
+  final _passwordController = TextEditingController();
 
-  // ---State variables for splitting user types ---
+  //  Supabase client and loading state
+  final supabase = Supabase.instance.client;
+  bool _isLoading = false;
+
+  bool _obscurePassword = true;
   bool _isStudent = true;
-  String _staffRole = 'Lecturer'; // Default for non-students
+  String _staffRole = 'Lecturer';
   final List<String> _staffRoles = ['Lecturer', 'Official Department'];
+
+  // Connection to the database
+  Future<void> _signUp() async {
+    // 1. Check if fields are empty
+    if (_emailController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // 2. Create the secure login account in Auth
+      final AuthResponse res = await supabase.auth.signUp(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      final User? user = res.user;
+
+      if (user != null) {
+        final finalRole = _isStudent ? 'Student' : _staffRole;
+
+        // 3. Save the extra profile details into our public.profiles table
+        await supabase.from('profiles').insert({
+          'id': user.id, // Links this profile to the secure auth account
+          'display_name': _displayNameController.text.trim(),
+          'full_name': _fullNameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'role': finalRole,
+          'institutional_id': _idController.text.trim(),
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Account created successfully!')),
+          );
+          Navigator.pop(context); // Go back to login screen
+        }
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } catch (e) {
+      // Catch any other errors
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _displayNameController.dispose();
+    _fullNameController.dispose();
+    _emailController.dispose();
+    _idController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // isDarkMode variable has been completely removed
-
     return Scaffold(
-      backgroundColor: Colors.white, // Locked to white background
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(
-          color: Colors.black, // Locked back button to black
-        ),
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -42,17 +124,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black, // Locked text to black
+                  color: Colors.black,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Join Computer Science Club',
-                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: const Color.fromARGB(255, 134, 134, 134),
+                ),
               ),
               const SizedBox(height: 30),
 
-              // --- Account Type Toggle ---
+              //Choice Box
               Row(
                 children: [
                   Expanded(
@@ -73,7 +158,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       labelStyle: TextStyle(
                         color: _isStudent
                             ? const Color.fromARGB(255, 41, 99, 165)
-                            : Colors.grey,
+                            : const Color.fromARGB(255, 134, 134, 134),
                         fontWeight: FontWeight.bold,
                       ),
                       shape: RoundedRectangleBorder(
@@ -102,7 +187,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       labelStyle: TextStyle(
                         color: !_isStudent
                             ? const Color.fromARGB(255, 41, 99, 165)
-                            : Colors.grey,
+                            : const Color.fromARGB(255, 134, 134, 134),
                         fontWeight: FontWeight.bold,
                       ),
                       shape: RoundedRectangleBorder(
@@ -114,47 +199,42 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Display name
+              //User
+              // Pass the specific controller to each field
               _buildTextField(
+                controller: _displayNameController,
                 hint: 'Display Name',
                 icon: PhosphorIconsRegular.user,
               ),
               const SizedBox(height: 16),
-
-              // Name Field
               _buildTextField(
+                controller: _fullNameController,
                 hint: 'Full Name',
                 icon: PhosphorIconsRegular.user,
               ),
               const SizedBox(height: 16),
-
-              // Email
               _buildTextField(
+                controller: _emailController,
                 hint: 'Email',
                 icon: PhosphorIconsRegular.envelope,
               ),
               const SizedBox(height: 16),
 
-              // --- Dynamic ID & Role Fields ---
               if (_isStudent)
                 _buildTextField(
+                  controller: _idController,
                   hint: 'Student ID',
                   icon: LucideIcons.badgeInfo,
                 )
               else ...[
-                // Staff Role Dropdown
                 Container(
+                  //lecturebox
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color.fromARGB(
-                      255,
-                      235,
-                      232,
-                      232,
-                    ), // Locked to grey
+                    color: const Color.fromARGB(255, 226, 225, 225),
                     borderRadius: BorderRadius.circular(30),
                   ),
                   child: DropdownButtonHideUnderline(
@@ -184,34 +264,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Staff ID Field
                 _buildTextField(
+                  controller: _idController,
                   hint: 'Employee / Department ID',
                   icon: LucideIcons.briefcase,
                 ),
               ],
 
               const SizedBox(height: 16),
-
-              // Password Field
               _buildTextField(
+                controller: _passwordController,
                 hint: 'Password',
                 icon: PhosphorIconsRegular.lockSimple,
                 isPassword: true,
               ),
               const SizedBox(height: 32),
-
-              // Sign Up Button
+              //Signup
               SizedBox(
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: () {
-                    final finalRole = _isStudent ? 'Student' : _staffRole;
-                    print("User is signing up with role: $finalRole");
-
-                    Navigator.pop(context);
-                  },
+                  // Call the _signUp function or show loading indicator
+                  onPressed: _isLoading ? null : _signUp,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(
                       255,
@@ -224,14 +298,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    'Sign Up',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(
+                          color: Colors.white,
+                        )
+                      : const Text(
+                          'Sign Up',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -242,15 +320,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  // Removed isDarkMode parameter from the helper method
+  // UPDATED** Added the TextEditingController parameter
   Widget _buildTextField({
+    required TextEditingController controller,
     required String hint,
     required IconData icon,
     bool isPassword = false,
   }) {
     return TextField(
+      controller: controller, // Connect the text field to its controller
       obscureText: isPassword ? _obscurePassword : false,
-      style: const TextStyle(color: Colors.black), // Locked to black text
+      style: const TextStyle(color: Colors.black),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(color: Colors.grey[500]),
@@ -269,14 +349,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 },
               )
             : null,
+
+        //Fillbox
         filled: true,
-        //box color
-        fillColor: const Color.fromARGB(
-          255,
-          242,
-          242,
-          243,
-        ), // Locked to light grey fill
+        fillColor: const Color.fromARGB(255, 241, 241, 241),
         contentPadding: const EdgeInsets.symmetric(vertical: 18),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
@@ -284,15 +360,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide(
-            //border color
-            color: Colors.grey[300]!, // Locked to grey border
-          ),
+          borderSide: BorderSide(color: Colors.grey[300]!),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
           borderSide: const BorderSide(
-            //active color
             color: Color.fromARGB(255, 41, 99, 165),
             width: 2,
           ),
