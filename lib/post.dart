@@ -3,8 +3,6 @@ import 'package:phosphor_icons/phosphor_icons.dart';
 import 'post_detail.dart';
 import 'package:provider/provider.dart';
 import 'post_provider.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:phosphor_icons/phosphor_icons.dart';
 
 class PostCard extends StatelessWidget {
   final String id;
@@ -30,10 +28,53 @@ class PostCard extends StatelessWidget {
     required this.share,
   });
 
+  // 1. Helper method
+  Widget _buildRoleBadge(String role, bool isDarkMode) {
+    Color bgColor;
+    Color textColor;
+
+    // Determine colors based on the role
+    if (role.toLowerCase() == 'student') {
+      bgColor = const Color.fromARGB(255, 41, 99, 165).withOpacity(0.15);
+      textColor = isDarkMode
+          ? Colors.blue[300]!
+          : const Color.fromARGB(255, 41, 99, 165);
+    } else if (role.toLowerCase() == 'lecturer') {
+      bgColor = Colors.teal.withOpacity(0.15);
+      textColor = isDarkMode ? Colors.teal[300]! : Colors.teal[700]!;
+    } else if (role.toLowerCase() == 'official department') {
+      bgColor = Colors.deepPurple.withOpacity(0.15);
+      textColor = isDarkMode
+          ? Colors.deepPurple[300]!
+          : Colors.deepPurple[700]!;
+    } else {
+      bgColor = Colors.grey.withOpacity(0.15);
+      textColor = isDarkMode ? Colors.grey[400]! : Colors.grey[700]!;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12), // Pill shape
+      ),
+      child: Text(
+        role,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.3,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isUpvoted = Provider.of<PostProvider>(context).hasUpvoted(id);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return InkWell(
       onTap: () {
         //navigation logic when the post is tapped
@@ -91,14 +132,24 @@ class PostCard extends StatelessWidget {
                             fontSize: 16,
                           ),
                         ),
-                        Text(
-                          '$role • $timeAgo',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 13,
-                          ),
+                        const SizedBox(height: 4),
+
+                        //Badge
+                        Row(
+                          children: [
+                            _buildRoleBadge(role, isDarkMode),
+                            const SizedBox(width: 6),
+                            Text(
+                              '• $timeAgo',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 2), // Tiny spacing
+
+                        const SizedBox(height: 4),
                         Text(
                           category,
                           style: TextStyle(
@@ -167,13 +218,13 @@ class PostCard extends StatelessWidget {
                         97,
                         97,
                         97,
-                      ), // Stops the purple splash
+                      ),
                     ),
                     icon: const Icon(
                       PhosphorIconsFill.chatCircleDots,
                       size: 20,
                     ),
-                    label: Text('$comments', style: TextStyle()),
+                    label: Text('$comments', style: const TextStyle()),
                   ),
                   TextButton.icon(
                     onPressed: () {},
@@ -183,13 +234,13 @@ class PostCard extends StatelessWidget {
                         97,
                         97,
                         97,
-                      ), // Stops the purple splash
+                      ),
                     ),
                     icon: const Icon(
                       PhosphorIconsFill.arrowBendUpRight,
                       size: 20,
                     ),
-                    label: Text('$share', style: TextStyle()),
+                    label: Text('$share', style: const TextStyle()),
                   ),
                 ],
               ),
