@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'post_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
 
 class AddPostScreen extends StatefulWidget {
   const AddPostScreen({super.key});
@@ -17,12 +17,13 @@ class _AddPostScreenState extends State<AddPostScreen> {
   final TextEditingController _contentController = TextEditingController();
   String? _selectedCategory;
 
-  // State variables for image uploading
+  // State variables for image uploading and dynamic user details
   File? _selectedImage;
   bool _isUploading = false;
+  String _uploaderName = 'Loading...';
   final supabase = Supabase.instance.client;
 
-  // Category
+  // Category list
   final List<String> _categories = [
     '📌 Announcements',
     '📚 Academic',
@@ -37,27 +38,73 @@ class _AddPostScreenState extends State<AddPostScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _fetchUploaderProfile();
+  }
+
+  // Fetch the logged-in user's display_name dynamically from the profiles table
+  Future<void> _fetchUploaderProfile() async {
+    try {
+      final user = supabase.auth.currentUser;
+      if (user != null) {
+        final response = await supabase
+            .from('profiles')
+            .select(
+              'display_name',
+            ) // Changed from full_name to display_name
+            .eq('id', user.id)
+            .single();
+
+        if (mounted) {
+          setState(() {
+            _uploaderName = response['display_name'] ?? 'Unknown User';
+          });
+        }
+      }
+    } catch (e) {
+      print('Error fetching uploader name: $e');
+      if (mounted) {
+        setState(() {
+          _uploaderName = 'CS Student';
+        });
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _contentController.dispose();
     super.dispose();
   }
 
-  // Function to open the phone gallery
+  // Uses FilePicker.platform to fix the undefined getter error
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 70, // Compresses the image slightly for faster uploads
-    );
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
 
-    if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
+      if (result != null && result.files.isNotEmpty) {
+        final filePath = result.files.single.path;
+        if (filePath != null) {
+          setState(() {
+            _selectedImage = File(filePath);
+          });
+        }
+      }
+    } catch (e) {
+      print('Error picking file: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to open file picker: $e')),
+        );
+      }
     }
   }
 
-  // Updated publish function to handle the image upload
+  // Publish function
   Future<void> _publishPost() async {
     if (_selectedCategory == null || _contentController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -76,28 +123,25 @@ class _AddPostScreenState extends State<AddPostScreen> {
     try {
       String? imageUrl;
 
-      // 1. If an image is selected, upload it to Supabase first
       if (_selectedImage != null) {
         final fileExt = _selectedImage!.path.split('.').last;
         final fileName =
-            '${DateTime.now().millisecondsSinceEpoch}.$fileExt'; // Unique filename
+            '${DateTime.now().millisecondsSinceEpoch}.$fileExt';
 
         await supabase.storage
             .from('post_images')
             .upload(fileName, _selectedImage!);
 
-        // Grab the public URL of the uploaded image
         imageUrl = supabase.storage
             .from('post_images')
             .getPublicUrl(fileName);
       }
 
-      // 2. Send the text, category, and image URL to the database
       if (mounted) {
         await Provider.of<PostProvider>(context, listen: false).addPost(
           _selectedCategory!,
           _contentController.text,
-          imageUrl: imageUrl, // Pass the new image link
+          imageUrl: imageUrl,
         );
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -107,7 +151,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
           ),
         );
 
-        // Clear the form after posted
         _contentController.clear();
         setState(() {
           _selectedCategory = null;
@@ -134,7 +177,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Check if the app is currently in Dark Mode
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -152,7 +194,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
               bottom: 10.0,
             ),
             child: ElevatedButton(
-              // Disable the button if it's currently uploading
               onPressed: _isUploading ? null : _publishPost,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color.fromARGB(255, 41, 99, 165),
@@ -185,7 +226,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. User Header with Avatar, Name, and Category Selector
+              // User Header
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -199,15 +240,14 @@ class _AddPostScreenState extends State<AddPostScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'CS BANANA',
-                          style: TextStyle(
+                        Text(
+                          _uploaderName,
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
                         ),
                         const SizedBox(height: 4),
-                        // Sleek Category Dropdown Pill
                         Container(
                           height: 30,
                           padding: const EdgeInsets.symmetric(
@@ -274,15 +314,14 @@ class _AddPostScreenState extends State<AddPostScreen> {
               ),
               const SizedBox(height: 20),
 
-              // 2. Seamless Multi-line Text Input Canvas & Image Preview
+              // Multi-line Text Input Canvas & Image Preview
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
                       TextField(
                         controller: _contentController,
-                        maxLines:
-                            null, // Allows the text to grow infinitely
+                        maxLines: null,
                         keyboardType: TextInputType.multiline,
                         style: const TextStyle(fontSize: 18),
                         decoration: InputDecoration(
@@ -302,7 +341,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
                         ),
                       ),
 
-                      // 3. Image Preview Area
                       if (_selectedImage != null) ...[
                         const SizedBox(height: 16),
                         Stack(
@@ -339,7 +377,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                 ),
               ),
 
-              // 4. Bottom Photo Toolbar
+              // Bottom Photo Toolbar
               Container(
                 padding: const EdgeInsets.only(top: 12),
                 decoration: BoxDecoration(

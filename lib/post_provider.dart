@@ -18,8 +18,6 @@ class PostProvider extends ChangeNotifier {
     fetchPosts();
   }
 
-  // --- 1. FETCH POSTS FROM SUPABASE ---
-  // --- 1. FETCH POSTS AND USER UPVOTES FROM SUPABASE ---
   // --- 1. FETCH POSTS, UPVOTE COUNTS, AND USER UPVOTES FROM SUPABASE ---
   Future<void> fetchPosts() async {
     if (_posts.isEmpty) {
@@ -30,7 +28,6 @@ class PostProvider extends ChangeNotifier {
     try {
       final userId = supabase.auth.currentUser?.id;
 
-      // 1. Fetch which posts this specific user has upvoted
       if (userId != null) {
         final upvotesResponse = await supabase
             .from('upvotes')
@@ -43,11 +40,11 @@ class PostProvider extends ChangeNotifier {
         }
       }
 
-      // 2. Query posts, join profiles, and count the upvotes relation
+      // Explicitly select display_name from joined profiles
       final response = await supabase
           .from('posts')
           .select(
-            '*, profiles!posts_author_id_fkey(full_name, role), upvotes(count)',
+            '*, profiles!posts_author_id_fkey(display_name, role), upvotes(count)',
           )
           .order('created_at', ascending: false);
 
@@ -57,7 +54,6 @@ class PostProvider extends ChangeNotifier {
         final profile = item['profiles'] ?? {};
         final postId = item['id'].toString();
 
-        // Extract the true upvote count from the Supabase count response
         int realUpvoteCount = 0;
         final upvotesData = item['upvotes'];
         if (upvotesData is List && upvotesData.isNotEmpty) {
@@ -66,13 +62,14 @@ class PostProvider extends ChangeNotifier {
 
         return {
           'id': postId,
-          'uploaderName': profile['full_name'] ?? 'Unknown User',
+          // CRITICAL: Must map to display_name from profiles table
+          'uploaderName': profile['display_name'] ?? 'Unknown User',
           'role': profile['role'] ?? 'Student',
           'category': item['category'] ?? 'General',
           'content': item['content'] ?? '',
           'imageUrl': item['image_url'],
           'timeAgo': _calculateTimeAgo(item['created_at']),
-          'upvotes': realUpvoteCount, // Uses the real database count!
+          'upvotes': realUpvoteCount,
           'comments': 0,
           'share': 0,
         };
@@ -107,7 +104,6 @@ class PostProvider extends ChangeNotifier {
   }
 
   // --- 2. UPVOTE POST ---
-  // --- 2. UPVOTE POST ---
   Future<void> upvotePost(String postId) async {
     final index = _posts.indexWhere((post) => post['id'] == postId);
     if (index == -1) return;
@@ -123,7 +119,7 @@ class PostProvider extends ChangeNotifier {
         // REMOVE UPVOTE LOCALLY & FROM SUPABASE
         _posts[index]['upvotes'] -= 1;
         _upvotedPostIds.remove(postId);
-        notifyListeners(); // or notifyListeners();
+        notifyListeners();
 
         await supabase.from('upvotes').delete().match({
           'post_id': postId,
@@ -167,29 +163,26 @@ class PostProvider extends ChangeNotifier {
     String? imageUrl,
   }) async {
     final user = supabase.auth.currentUser;
-    if (user == null) {
-      print('Must be logged in to post');
-      return;
-    }
+    if (user == null) return;
 
     try {
-      // Insert into Supabase
       final response = await supabase
           .from('posts')
           .insert({
-            'author_id': user.id, // Links directly to the logged-in user
+            'author_id': user.id,
             'content': content,
             'category': category,
-            'image_url': imageUrl, // Will be null if no image is provided
+            'image_url': imageUrl,
           })
-          .select('*, profiles!posts_author_id_fkey(full_name, role)')
+          .select('*, profiles!posts_author_id_fkey(display_name, role)')
           .single();
 
-      // Format the returned data to instantly match the UI
       final profile = response['profiles'] ?? {};
       final newPost = {
         'id': response['id'].toString(),
-        'uploaderName': profile['full_name'] ?? 'Unknown User',
+        'uploaderName':
+            profile['display_name'] ??
+            'Unknown User', // Maps display_name!
         'role': profile['role'] ?? 'Student',
         'category': response['category'] ?? 'General',
         'content': response['content'] ?? '',
@@ -200,10 +193,8 @@ class PostProvider extends ChangeNotifier {
         'share': 0,
       };
 
-      // Insert at the top of the feed and update UI
       _posts.insert(0, newPost);
       notifyListeners();
-      print('Post successfully saved to Supabase!');
     } catch (error) {
       print('Error saving post: $error');
     }
