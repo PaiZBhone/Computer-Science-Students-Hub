@@ -224,6 +224,8 @@ class _MyhomeState extends State<Myhome> {
                       return PostCard(
                         id: post['id'],
                         uploaderName: post['uploaderName'],
+                        uploaderAvatar:
+                            post['uploaderAvatar'], // Pass the avatar URL here!
                         role: post['role'],
                         category: post['category'],
                         timeAgo: post['timeAgo'],

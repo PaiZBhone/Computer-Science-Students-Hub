@@ -6,16 +6,18 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class PostDetailScreen extends StatelessWidget {
   final String id;
   final String uploaderName;
+  final String? uploaderAvatar; // 1. Added optional avatar property
   final String role;
   final String category;
   final String timeAgo;
   final String content;
-  final String? imageUrl; // Added image support
+  final String? imageUrl;
 
   const PostDetailScreen({
     super.key,
     required this.id,
     required this.uploaderName,
+    this.uploaderAvatar, // 2. Added to constructor
     required this.role,
     required this.category,
     required this.timeAgo,
@@ -33,7 +35,6 @@ class PostDetailScreen extends StatelessWidget {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-          // Show delete button only if it belongs to the logged-in user
           IconButton(
             icon: const Icon(Icons.delete_outline),
             color: const Color.fromARGB(255, 184, 59, 50),
@@ -75,7 +76,6 @@ class PostDetailScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // 1. Post Content Area
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
@@ -84,9 +84,24 @@ class PostDetailScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const CircleAvatar(
-                        backgroundColor: Color.fromARGB(255, 41, 99, 165),
-                        child: Icon(Icons.person, color: Colors.white),
+                      // Render network avatar if available, otherwise show fallback icon
+                      CircleAvatar(
+                        backgroundColor: const Color.fromARGB(
+                          255,
+                          41,
+                          99,
+                          165,
+                        ),
+                        backgroundImage:
+                            uploaderAvatar != null &&
+                                uploaderAvatar!.isNotEmpty
+                            ? NetworkImage(uploaderAvatar!)
+                            : null,
+                        child:
+                            (uploaderAvatar == null ||
+                                uploaderAvatar!.isEmpty)
+                            ? const Icon(Icons.person, color: Colors.white)
+                            : null,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -118,7 +133,6 @@ class PostDetailScreen extends StatelessWidget {
                     style: const TextStyle(fontSize: 16, height: 1.5),
                   ),
 
-                  // Render image if available
                   if (imageUrl != null && imageUrl!.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     ClipRRect(
@@ -136,7 +150,6 @@ class PostDetailScreen extends StatelessWidget {
           ),
           const Divider(height: 1, thickness: 1),
 
-          // 2. Comments Section (Placeholder)
           Container(
             padding: const EdgeInsets.symmetric(
               horizontal: 16.0,

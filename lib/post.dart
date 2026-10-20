@@ -7,11 +7,12 @@ import 'post_provider.dart';
 class PostCard extends StatelessWidget {
   final String id;
   final String uploaderName;
+  final String? uploaderAvatar; // Added optional avatar URL
   final String category;
   final String role;
   final String timeAgo;
   final String content;
-  final String? imageUrl; // NEW: Optional image link property
+  final String? imageUrl;
   final int upvotes;
   final int comments;
   final int share;
@@ -20,22 +21,21 @@ class PostCard extends StatelessWidget {
     super.key,
     required this.id,
     required this.uploaderName,
+    this.uploaderAvatar,
     required this.category,
     required this.role,
     required this.timeAgo,
     required this.content,
-    this.imageUrl, // Added to constructor
+    this.imageUrl,
     required this.upvotes,
     required this.comments,
     required this.share,
   });
 
-  // 1. Helper method
   Widget _buildRoleBadge(String role, bool isDarkMode) {
     Color bgColor;
     Color textColor;
 
-    // Determine colors based on the role
     if (role.toLowerCase() == 'student') {
       bgColor = const Color.fromARGB(255, 41, 99, 165).withOpacity(0.15);
       textColor = isDarkMode
@@ -58,7 +58,7 @@ class PostCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(12), // Pill shape
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         role,
@@ -79,13 +79,13 @@ class PostCard extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        //navigation logic when the post is tapped
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => PostDetailScreen(
               id: id,
               uploaderName: uploaderName,
+              uploaderAvatar: uploaderAvatar,
               role: role,
               category: category,
               timeAgo: timeAgo,
@@ -95,7 +95,6 @@ class PostCard extends StatelessWidget {
         );
       },
       child: Card(
-        //post color
         color: isDarkMode
             ? const Color.fromARGB(255, 30, 30, 30)
             : Colors.white,
@@ -112,9 +111,22 @@ class PostCard extends StatelessWidget {
               // Header: Avatar, Name, Role, Category, Options
               Row(
                 children: [
-                  const CircleAvatar(
-                    backgroundColor: Color.fromARGB(255, 41, 99, 165),
-                    child: Icon(Icons.person, color: Colors.white),
+                  CircleAvatar(
+                    backgroundColor: const Color.fromARGB(
+                      255,
+                      41,
+                      99,
+                      165,
+                    ),
+                    backgroundImage:
+                        uploaderAvatar != null &&
+                            uploaderAvatar!.isNotEmpty
+                        ? NetworkImage(uploaderAvatar!)
+                        : null,
+                    child:
+                        (uploaderAvatar == null || uploaderAvatar!.isEmpty)
+                        ? const Icon(Icons.person, color: Colors.white)
+                        : null,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -130,7 +142,6 @@ class PostCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
 
-                        //Badge & Time
                         Row(
                           children: [
                             _buildRoleBadge(role, isDarkMode),
@@ -168,13 +179,11 @@ class PostCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
 
-              // Body: Post Content
               Text(
                 content,
                 style: const TextStyle(fontSize: 15, height: 1.4),
               ),
 
-              // --- NEW: Render Image if available ---
               if (imageUrl != null && imageUrl!.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 ClipRRect(
@@ -203,7 +212,6 @@ class PostCard extends StatelessWidget {
               const SizedBox(height: 16),
               const Divider(height: 1, thickness: 1),
 
-              // Upvote, Comment, Share
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

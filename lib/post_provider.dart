@@ -11,14 +11,13 @@ class PostProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get posts => _posts;
   bool get isLoading => _isLoading;
 
-  // Create the Supabase client
   final supabase = Supabase.instance.client;
 
   PostProvider() {
     fetchPosts();
   }
 
-  // --- 1. FETCH POSTS, UPVOTE COUNTS, AND USER UPVOTES FROM SUPABASE ---
+  // --- 1. FETCH POSTS FROM SUPABASE ---
   Future<void> fetchPosts() async {
     if (_posts.isEmpty) {
       _isLoading = true;
@@ -40,11 +39,11 @@ class PostProvider extends ChangeNotifier {
         }
       }
 
-      // Explicitly select display_name from joined profiles
+      // Query posts & join avatar_url from profiles
       final response = await supabase
           .from('posts')
           .select(
-            '*, profiles!posts_author_id_fkey(display_name, role), upvotes(count)',
+            '*, profiles!posts_author_id_fkey(display_name, role, avatar_url), upvotes(count)',
           )
           .order('created_at', ascending: false);
 
@@ -62,8 +61,9 @@ class PostProvider extends ChangeNotifier {
 
         return {
           'id': postId,
-          // CRITICAL: Must map to display_name from profiles table
           'uploaderName': profile['display_name'] ?? 'Unknown User',
+          'uploaderAvatar':
+              profile['avatar_url'], // Added avatar_url mapping
           'role': profile['role'] ?? 'Student',
           'category': item['category'] ?? 'General',
           'content': item['content'] ?? '',
@@ -82,7 +82,6 @@ class PostProvider extends ChangeNotifier {
     }
   }
 
-  // --- CUSTOM TIME PARSER ---
   String _calculateTimeAgo(String? timestamp) {
     if (timestamp == null) return 'Just now';
 
@@ -103,20 +102,15 @@ class PostProvider extends ChangeNotifier {
     }
   }
 
-  // --- 2. UPVOTE POST ---
   Future<void> upvotePost(String postId) async {
     final index = _posts.indexWhere((post) => post['id'] == postId);
     if (index == -1) return;
 
     final userId = supabase.auth.currentUser?.id;
-    if (userId == null) {
-      print('User must be logged in to upvote');
-      return;
-    }
+    if (userId == null) return;
 
     try {
       if (_upvotedPostIds.contains(postId)) {
-        // REMOVE UPVOTE LOCALLY & FROM SUPABASE
         _posts[index]['upvotes'] -= 1;
         _upvotedPostIds.remove(postId);
         notifyListeners();
@@ -126,7 +120,6 @@ class PostProvider extends ChangeNotifier {
           'user_id': userId,
         });
       } else {
-        // ADD UPVOTE LOCALLY & TO SUPABASE
         _posts[index]['upvotes'] += 1;
         _upvotedPostIds.add(postId);
         notifyListeners();
@@ -137,26 +130,21 @@ class PostProvider extends ChangeNotifier {
         });
       }
     } catch (error) {
-      print('Error syncing upvote to database: $error');
+      print('Error syncing upvote: $error');
     }
   }
 
-  // --- 3. DELETE POST ---
   Future<void> deletePost(String postId) async {
-    // 1. Remove instantly from UI
     _posts.removeWhere((post) => post['id'] == postId);
     notifyListeners();
 
-    // 2. Delete permanently from Supabase
     try {
       await supabase.from('posts').delete().eq('id', postId);
-      print('Post deleted successfully');
     } catch (error) {
       print('Error deleting post: $error');
     }
   }
 
-  // --- 4. ADD BRAND NEW POST ---
   Future<void> addPost(
     String category,
     String content, {
@@ -174,15 +162,17 @@ class PostProvider extends ChangeNotifier {
             'category': category,
             'image_url': imageUrl,
           })
-          .select('*, profiles!posts_author_id_fkey(display_name, role)')
+          .select(
+            '*, profiles!posts_author_id_fkey(display_name, role, avatar_url)',
+          )
           .single();
 
       final profile = response['profiles'] ?? {};
       final newPost = {
         'id': response['id'].toString(),
-        'uploaderName':
-            profile['display_name'] ??
-            'Unknown User', // Maps display_name!
+        'uploaderName': profile['display_name'] ?? 'Unknown User',
+        'uploaderAvatar':
+            profile['avatar_url'], // Added avatar_url mapping
         'role': profile['role'] ?? 'Student',
         'category': response['category'] ?? 'General',
         'content': response['content'] ?? '',
