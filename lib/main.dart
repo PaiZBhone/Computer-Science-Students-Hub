@@ -25,7 +25,6 @@ void main() async {
 
   // 3. Run your app normally
   runApp(
-    // MultiProvider allows us to inject both Post data and Theme data globally
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => PostProvider()),

@@ -19,6 +19,8 @@ class PostProvider extends ChangeNotifier {
   }
 
   // --- 1. FETCH POSTS FROM SUPABASE ---
+  // --- 1. FETCH POSTS AND USER UPVOTES FROM SUPABASE ---
+  // --- 1. FETCH POSTS, UPVOTE COUNTS, AND USER UPVOTES FROM SUPABASE ---
   Future<void> fetchPosts() async {
     if (_posts.isEmpty) {
       _isLoading = true;
@@ -26,29 +28,51 @@ class PostProvider extends ChangeNotifier {
     }
 
     try {
-      // Query the posts table and JOIN the profiles table using the explicit foreign key hint
+      final userId = supabase.auth.currentUser?.id;
+
+      // 1. Fetch which posts this specific user has upvoted
+      if (userId != null) {
+        final upvotesResponse = await supabase
+            .from('upvotes')
+            .select('post_id')
+            .eq('user_id', userId);
+
+        _upvotedPostIds.clear();
+        for (var row in upvotesResponse) {
+          _upvotedPostIds.add(row['post_id'].toString());
+        }
+      }
+
+      // 2. Query posts, join profiles, and count the upvotes relation
       final response = await supabase
           .from('posts')
-          .select('*, profiles!posts_author_id_fkey(full_name, role)')
-          .order(
-            'created_at',
-            ascending: false,
-          ); // Sort newest first automatically
+          .select(
+            '*, profiles!posts_author_id_fkey(full_name, role), upvotes(count)',
+          )
+          .order('created_at', ascending: false);
 
       final List<dynamic> data = response;
 
       _posts = data.map((item) {
         final profile = item['profiles'] ?? {};
+        final postId = item['id'].toString();
+
+        // Extract the true upvote count from the Supabase count response
+        int realUpvoteCount = 0;
+        final upvotesData = item['upvotes'];
+        if (upvotesData is List && upvotesData.isNotEmpty) {
+          realUpvoteCount = upvotesData[0]['count'] ?? 0;
+        }
 
         return {
-          'id': item['id'].toString(),
+          'id': postId,
           'uploaderName': profile['full_name'] ?? 'Unknown User',
           'role': profile['role'] ?? 'Student',
           'category': item['category'] ?? 'General',
           'content': item['content'] ?? '',
-          'imageUrl': item['image_url'], // Optional image support
+          'imageUrl': item['image_url'],
           'timeAgo': _calculateTimeAgo(item['created_at']),
-          'upvotes': 0, // We will calculate true upvotes in a later step
+          'upvotes': realUpvoteCount, // Uses the real database count!
           'comments': 0,
           'share': 0,
         };
@@ -83,29 +107,33 @@ class PostProvider extends ChangeNotifier {
   }
 
   // --- 2. UPVOTE POST ---
+  // --- 2. UPVOTE POST ---
   Future<void> upvotePost(String postId) async {
     final index = _posts.indexWhere((post) => post['id'] == postId);
     if (index == -1) return;
 
     final userId = supabase.auth.currentUser?.id;
-    if (userId == null) return; // Must be logged in
+    if (userId == null) {
+      print('User must be logged in to upvote');
+      return;
+    }
 
     try {
       if (_upvotedPostIds.contains(postId)) {
-        // REMOVE UPVOTE
+        // REMOVE UPVOTE LOCALLY & FROM SUPABASE
         _posts[index]['upvotes'] -= 1;
         _upvotedPostIds.remove(postId);
-        notifyListeners(); // Optimistic UI update
+        notifyListeners(); // or notifyListeners();
 
         await supabase.from('upvotes').delete().match({
           'post_id': postId,
           'user_id': userId,
         });
       } else {
-        // ADD UPVOTE
+        // ADD UPVOTE LOCALLY & TO SUPABASE
         _posts[index]['upvotes'] += 1;
         _upvotedPostIds.add(postId);
-        notifyListeners(); // Optimistic UI update
+        notifyListeners();
 
         await supabase.from('upvotes').insert({
           'post_id': postId,
@@ -113,8 +141,7 @@ class PostProvider extends ChangeNotifier {
         });
       }
     } catch (error) {
-      print('Error toggling upvote: $error');
-      // Ideally, revert the UI change here if the database fails
+      print('Error syncing upvote to database: $error');
     }
   }
 

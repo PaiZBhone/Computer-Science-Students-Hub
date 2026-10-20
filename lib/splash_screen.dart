@@ -16,9 +16,11 @@ class SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     Timer(const Duration(seconds: 3), () {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
     });
   }
 
@@ -28,31 +30,23 @@ class SplashScreenState extends State<SplashScreen> {
       backgroundColor: Colors.white,
       body: Center(
         child: Column(
-          mainAxisAlignment:
-              MainAxisAlignment.center, // Centers everything vertically
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Powered by', // Your new second line!
+              'Powered by',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[700],
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(
-              height: 5,
-            ), // Adds a small gap between the text lines
+            const SizedBox(height: 5),
             const Text(
               'MatriX',
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
-                color: const Color.fromARGB(
-                  255,
-                  41,
-                  99,
-                  165,
-                ), // Updated to match your app's theme
+                color: Color.fromARGB(255, 41, 99, 165),
               ),
             ),
           ],
