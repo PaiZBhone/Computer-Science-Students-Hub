@@ -21,6 +21,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
   File? _selectedImage;
   bool _isUploading = false;
   String _uploaderName = 'Loading...';
+  String? _uploaderAvatar; // NEW: Added to store the avatar URL
   final supabase = Supabase.instance.client;
 
   // Category list
@@ -43,7 +44,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
     _fetchUploaderProfile();
   }
 
-  // Fetch the logged-in user's display_name dynamically from the profiles table
+  // Fetch the logged-in user's display_name and avatar_url dynamically from the profiles table
   Future<void> _fetchUploaderProfile() async {
     try {
       final user = supabase.auth.currentUser;
@@ -51,19 +52,21 @@ class _AddPostScreenState extends State<AddPostScreen> {
         final response = await supabase
             .from('profiles')
             .select(
-              'display_name',
-            ) // Changed from full_name to display_name
+              'display_name, avatar_url',
+            ) // NEW: Fetches avatar_url as well
             .eq('id', user.id)
             .single();
 
         if (mounted) {
           setState(() {
             _uploaderName = response['display_name'] ?? 'Unknown User';
+            _uploaderAvatar =
+                response['avatar_url']; // NEW: Assigns the fetched avatar URL
           });
         }
       }
     } catch (e) {
-      print('Error fetching uploader name: $e');
+      print('Error fetching uploader profile: $e');
       if (mounted) {
         setState(() {
           _uploaderName = 'CS Student';
@@ -78,7 +81,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
     super.dispose();
   }
 
-  // Uses FilePicker.platform to fix the undefined getter error
+  // Uses FilePicker.platform to open file explorer
   Future<void> _pickImage() async {
     try {
       final result = await FilePicker.pickFiles(
@@ -230,10 +233,25 @@ class _AddPostScreenState extends State<AddPostScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const CircleAvatar(
+                  // NEW: Dynamic Avatar logic mirroring the feed card
+                  CircleAvatar(
                     radius: 24,
-                    backgroundColor: Color.fromARGB(255, 41, 99, 165),
-                    child: Icon(Icons.person, color: Colors.white),
+                    backgroundColor: const Color.fromARGB(
+                      255,
+                      41,
+                      99,
+                      165,
+                    ),
+                    backgroundImage:
+                        _uploaderAvatar != null &&
+                            _uploaderAvatar!.isNotEmpty
+                        ? NetworkImage(_uploaderAvatar!)
+                        : null,
+                    child:
+                        (_uploaderAvatar == null ||
+                            _uploaderAvatar!.isEmpty)
+                        ? const Icon(Icons.person, color: Colors.white)
+                        : null,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
