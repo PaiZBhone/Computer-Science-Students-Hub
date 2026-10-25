@@ -3,11 +3,13 @@ import 'package:phosphor_icons/phosphor_icons.dart';
 import 'post_detail.dart';
 import 'package:provider/provider.dart';
 import 'post_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; // Needed for checking current user
 
 class PostCard extends StatelessWidget {
   final String id;
+  final String authorId; // Added authorId parameter
   final String uploaderName;
-  final String? uploaderAvatar; // Added optional avatar URL
+  final String? uploaderAvatar;
   final String category;
   final String role;
   final String timeAgo;
@@ -20,6 +22,7 @@ class PostCard extends StatelessWidget {
   const PostCard({
     super.key,
     required this.id,
+    required this.authorId, // Added to constructor
     required this.uploaderName,
     this.uploaderAvatar,
     required this.category,
@@ -77,6 +80,10 @@ class PostCard extends StatelessWidget {
     final isUpvoted = Provider.of<PostProvider>(context).hasUpvoted(id);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
+    // Check if the current user is the author of this specific post
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    final isAuthor = currentUserId == authorId;
+
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -90,6 +97,7 @@ class PostCard extends StatelessWidget {
               category: category,
               timeAgo: timeAgo,
               content: content,
+              imageUrl: imageUrl,
             ),
           ),
         );
@@ -108,7 +116,6 @@ class PostCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header: Avatar, Name, Role, Category, Options
               Row(
                 children: [
                   CircleAvatar(
@@ -168,13 +175,71 @@ class PostCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(
-                      PhosphorIconsFill.dotsThreeOutline,
-                      color: Color.fromARGB(255, 97, 97, 97),
+
+                  // Only show delete menu if logged-in user is the author
+                  if (isAuthor)
+                    PopupMenuButton<String>(
+                      icon: const Icon(
+                        PhosphorIconsFill.dotsThreeOutline,
+                        color: Color.fromARGB(255, 97, 97, 97),
+                      ),
+                      onSelected: (value) {
+                        if (value == 'delete') {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext dialogContext) {
+                              return AlertDialog(
+                                title: const Text('Delete Post'),
+                                content: const Text(
+                                  'Are you sure you want to permanently delete this post?',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    child: const Text('Cancel'),
+                                    onPressed: () =>
+                                        Navigator.of(dialogContext).pop(),
+                                  ),
+                                  TextButton(
+                                    child: const Text(
+                                      'Delete',
+                                      style: TextStyle(color: Colors.red),
+                                    ),
+                                    onPressed: () {
+                                      Navigator.of(dialogContext).pop();
+                                      Provider.of<PostProvider>(
+                                        context,
+                                        listen: false,
+                                      ).deletePost(id);
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        }
+                      },
+                      itemBuilder: (BuildContext context) =>
+                          <PopupMenuEntry<String>>[
+                            const PopupMenuItem<String>(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.delete_outline,
+                                    color: Colors.redAccent,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Delete Post',
+                                    style: TextStyle(
+                                      color: Colors.redAccent,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                     ),
-                    onPressed: () {},
-                  ),
                 ],
               ),
               const SizedBox(height: 12),

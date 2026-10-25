@@ -53,12 +53,9 @@ class _MyhomeState extends State<Myhome> {
     }).toList();
 
     return Scaffold(
-      //backgroud feed color
-      //backgroundColor: Colors.white,
       body: Provider.of<PostProvider>(context).isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              // This triggers the fetch function when you pull down!
               onRefresh: () => Provider.of<PostProvider>(
                 context,
                 listen: false,
@@ -66,11 +63,9 @@ class _MyhomeState extends State<Myhome> {
               child: CustomScrollView(
                 slivers: [
                   SliverAppBar(
-                    toolbarHeight: 70, // Matches your previous height
-                    floating: true, // Hides the bar when scrolling down
-                    snap:
-                        true, // Snaps it back into view when scrolling up
-                    //backgroundColor: Colors.blue,
+                    toolbarHeight: 70,
+                    floating: true,
+                    snap: true,
                     elevation: 0,
                     title: const Text(
                       'College of DIT\n Computer Science Club',
@@ -106,7 +101,6 @@ class _MyhomeState extends State<Myhome> {
                           color: isDarkMode ? Colors.white : Colors.black,
                         ),
                         onChanged: (value) {
-                          // Every time the user types a letter, the screen updates!
                           setState(() {
                             _searchQuery = value;
                           });
@@ -118,7 +112,6 @@ class _MyhomeState extends State<Myhome> {
                             size: 22,
                             color: Colors.grey,
                           ),
-                          // Show a clear 'X' button only if there is text
                           suffixIcon: _searchQuery.isNotEmpty
                               ? IconButton(
                                   icon: const Icon(
@@ -135,7 +128,6 @@ class _MyhomeState extends State<Myhome> {
                               : null,
                           filled: true,
                           fillColor: isDarkMode
-                              //searchbar color
                               ? const Color.fromARGB(255, 34, 34, 34)
                               : Colors.white,
                           contentPadding: const EdgeInsets.symmetric(
@@ -147,7 +139,6 @@ class _MyhomeState extends State<Myhome> {
                               color: Colors.grey[300]!,
                             ),
                           ),
-                          //searchbar bordercolor
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
                             borderSide: BorderSide(
@@ -165,8 +156,6 @@ class _MyhomeState extends State<Myhome> {
                       ),
                     ),
                   ),
-
-                  // 5. The new Filter Chips Section
                   SliverToBoxAdapter(
                     child: Container(
                       height: 60,
@@ -205,7 +194,6 @@ class _MyhomeState extends State<Myhome> {
                                     ? FontWeight.bold
                                     : FontWeight.normal,
                               ),
-                              // Optional: Remove the border for a cleaner modern look
                               side: BorderSide.none,
                             ),
                           );
@@ -213,8 +201,6 @@ class _MyhomeState extends State<Myhome> {
                       ),
                     ),
                   ),
-
-                  // 6. The Scrolling List of Filtered Posts
                   SliverList(
                     delegate: SliverChildBuilderDelegate((
                       BuildContext context,
@@ -223,9 +209,10 @@ class _MyhomeState extends State<Myhome> {
                       final post = displayedPosts[index];
                       return PostCard(
                         id: post['id'],
+                        authorId:
+                            post['authorId'], // Added author ID passed to card
                         uploaderName: post['uploaderName'],
-                        uploaderAvatar:
-                            post['uploaderAvatar'], // Pass the avatar URL here!
+                        uploaderAvatar: post['uploaderAvatar'],
                         role: post['role'],
                         category: post['category'],
                         timeAgo: post['timeAgo'],

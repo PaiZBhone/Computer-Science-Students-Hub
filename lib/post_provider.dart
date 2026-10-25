@@ -61,9 +61,9 @@ class PostProvider extends ChangeNotifier {
 
         return {
           'id': postId,
+          'authorId': item['author_id'], // Track the author
           'uploaderName': profile['display_name'] ?? 'Unknown User',
-          'uploaderAvatar':
-              profile['avatar_url'], // Added avatar_url mapping
+          'uploaderAvatar': profile['avatar_url'],
           'role': profile['role'] ?? 'Student',
           'category': item['category'] ?? 'General',
           'content': item['content'] ?? '',
@@ -75,13 +75,14 @@ class PostProvider extends ChangeNotifier {
         };
       }).toList();
     } catch (error) {
-      print('Error fetching data from Supabase: $error');
+      print('Error fetching data from Supabase: \$error');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
+  //Time calculation
   String _calculateTimeAgo(String? timestamp) {
     if (timestamp == null) return 'Just now';
 
@@ -130,7 +131,7 @@ class PostProvider extends ChangeNotifier {
         });
       }
     } catch (error) {
-      print('Error syncing upvote: $error');
+      print('Error syncing upvote: \$error');
     }
   }
 
@@ -141,7 +142,7 @@ class PostProvider extends ChangeNotifier {
     try {
       await supabase.from('posts').delete().eq('id', postId);
     } catch (error) {
-      print('Error deleting post: $error');
+      print('Error deleting post: \$error');
     }
   }
 
@@ -154,10 +155,23 @@ class PostProvider extends ChangeNotifier {
     if (user == null) return;
 
     try {
+      // 1. Fetch the user's current display name from their profile
+      final profileData = await supabase
+          .from('profiles')
+          .select('display_name')
+          .eq('id', user.id)
+          .single();
+
+      final currentDisplayName =
+          profileData['display_name'] ?? 'Unknown User';
+
+      // 2. Insert the post WITH the display_name included
       final response = await supabase
           .from('posts')
           .insert({
             'author_id': user.id,
+            'display_name':
+                currentDisplayName, // Saved directly to posts table
             'content': content,
             'category': category,
             'image_url': imageUrl,
@@ -167,12 +181,13 @@ class PostProvider extends ChangeNotifier {
           )
           .single();
 
+      // 3. Update the UI instantly
       final profile = response['profiles'] ?? {};
       final newPost = {
         'id': response['id'].toString(),
-        'uploaderName': profile['display_name'] ?? 'Unknown User',
-        'uploaderAvatar':
-            profile['avatar_url'], // Added avatar_url mapping
+        'authorId': user.id,
+        'uploaderName': profile['display_name'] ?? currentDisplayName,
+        'uploaderAvatar': profile['avatar_url'],
         'role': profile['role'] ?? 'Student',
         'category': response['category'] ?? 'General',
         'content': response['content'] ?? '',

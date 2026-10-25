@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'post_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PostDetailScreen extends StatelessWidget {
   final String id;
   final String uploaderName;
-  final String? uploaderAvatar; // 1. Added optional avatar property
+  final String? uploaderAvatar;
   final String role;
   final String category;
   final String timeAgo;
@@ -17,7 +14,7 @@ class PostDetailScreen extends StatelessWidget {
     super.key,
     required this.id,
     required this.uploaderName,
-    this.uploaderAvatar, // 2. Added to constructor
+    this.uploaderAvatar,
     required this.role,
     required this.category,
     required this.timeAgo,
@@ -27,52 +24,11 @@ class PostDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Post Details'),
         foregroundColor: Colors.white,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_outline),
-            color: const Color.fromARGB(255, 184, 59, 50),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext dialogContext) {
-                  return AlertDialog(
-                    title: const Text('Delete Post'),
-                    content: const Text(
-                      'Are you sure you want to permanently delete this post?',
-                    ),
-                    actions: [
-                      TextButton(
-                        child: const Text('Cancel'),
-                        onPressed: () => Navigator.of(dialogContext).pop(),
-                      ),
-                      TextButton(
-                        child: const Text(
-                          'Delete',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                        onPressed: () {
-                          Navigator.of(dialogContext).pop();
-                          Provider.of<PostProvider>(
-                            context,
-                            listen: false,
-                          ).deletePost(id);
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -84,7 +40,6 @@ class PostDetailScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      // Render network avatar if available, otherwise show fallback icon
                       CircleAvatar(
                         backgroundColor: const Color.fromARGB(
                           255,

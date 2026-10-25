@@ -23,7 +23,7 @@ void main() async {
     anonKey: 'sb_publishable_NS7sWRbh_R1DFJxFxsDAQg_y_C0YI_N',
   );
 
-  // 3. Run your app normally
+  // 3. Run app normally
   runApp(
     MultiProvider(
       providers: [
