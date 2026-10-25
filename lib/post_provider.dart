@@ -17,6 +17,56 @@ class PostProvider extends ChangeNotifier {
     fetchPosts();
   }
 
+  // --- ADD A COMMENT ---
+  Future<void> addComment(String postId, String content) async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    try {
+      final profileData = await supabase
+          .from('profiles')
+          .select('display_name')
+          .eq('id', user.id)
+          .single();
+
+      final currentDisplayName =
+          profileData['display_name'] ?? 'Unknown User';
+
+      await supabase.from('comments').insert({
+        'post_id': postId,
+        'author_id': user.id,
+        'display_name': currentDisplayName,
+        'content': content,
+      });
+
+      final index = _posts.indexWhere((post) => post['id'] == postId);
+      if (index != -1) {
+        _posts[index]['comments'] += 1;
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Error saving comment: $e');
+    }
+  }
+
+  // --- FETCH COMMENTS FOR A SPECIFIC POST ---
+  Future<List<Map<String, dynamic>>> fetchComments(String postId) async {
+    try {
+      final response = await supabase
+          .from('comments')
+          .select(
+            '*, profiles!comments_author_id_fkey(display_name, avatar_url)',
+          )
+          .eq('post_id', postId)
+          .order('created_at', ascending: true);
+
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error fetching comments: $e');
+      return [];
+    }
+  }
+
   // --- 1. FETCH POSTS FROM SUPABASE ---
   Future<void> fetchPosts() async {
     if (_posts.isEmpty) {
@@ -39,11 +89,11 @@ class PostProvider extends ChangeNotifier {
         }
       }
 
-      // Query posts & join avatar_url from profiles
+      // Query posts, join profiles, and count upvotes AND comments
       final response = await supabase
           .from('posts')
           .select(
-            '*, profiles!posts_author_id_fkey(display_name, role, avatar_url), upvotes(count)',
+            '*, profiles!posts_author_id_fkey(display_name, role, avatar_url), upvotes(count), comments(count)',
           )
           .order('created_at', ascending: false);
 
@@ -59,9 +109,15 @@ class PostProvider extends ChangeNotifier {
           realUpvoteCount = upvotesData[0]['count'] ?? 0;
         }
 
+        int realCommentCount = 0;
+        final commentsData = item['comments'];
+        if (commentsData is List && commentsData.isNotEmpty) {
+          realCommentCount = commentsData[0]['count'] ?? 0;
+        }
+
         return {
           'id': postId,
-          'authorId': item['author_id'], // Track the author
+          'authorId': item['author_id'],
           'uploaderName': profile['display_name'] ?? 'Unknown User',
           'uploaderAvatar': profile['avatar_url'],
           'role': profile['role'] ?? 'Student',
@@ -70,19 +126,18 @@ class PostProvider extends ChangeNotifier {
           'imageUrl': item['image_url'],
           'timeAgo': _calculateTimeAgo(item['created_at']),
           'upvotes': realUpvoteCount,
-          'comments': 0,
+          'comments': realCommentCount, // Live count from DB
           'share': 0,
         };
       }).toList();
     } catch (error) {
-      print('Error fetching data from Supabase: \$error');
+      print('Error fetching data from Supabase: $error');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  //Time calculation
   String _calculateTimeAgo(String? timestamp) {
     if (timestamp == null) return 'Just now';
 
@@ -131,7 +186,7 @@ class PostProvider extends ChangeNotifier {
         });
       }
     } catch (error) {
-      print('Error syncing upvote: \$error');
+      print('Error syncing upvote: $error');
     }
   }
 
@@ -142,7 +197,7 @@ class PostProvider extends ChangeNotifier {
     try {
       await supabase.from('posts').delete().eq('id', postId);
     } catch (error) {
-      print('Error deleting post: \$error');
+      print('Error deleting post: $error');
     }
   }
 
@@ -155,7 +210,6 @@ class PostProvider extends ChangeNotifier {
     if (user == null) return;
 
     try {
-      // 1. Fetch the user's current display name from their profile
       final profileData = await supabase
           .from('profiles')
           .select('display_name')
@@ -165,13 +219,11 @@ class PostProvider extends ChangeNotifier {
       final currentDisplayName =
           profileData['display_name'] ?? 'Unknown User';
 
-      // 2. Insert the post WITH the display_name included
       final response = await supabase
           .from('posts')
           .insert({
             'author_id': user.id,
-            'display_name':
-                currentDisplayName, // Saved directly to posts table
+            'display_name': currentDisplayName,
             'content': content,
             'category': category,
             'image_url': imageUrl,
@@ -181,7 +233,6 @@ class PostProvider extends ChangeNotifier {
           )
           .single();
 
-      // 3. Update the UI instantly
       final profile = response['profiles'] ?? {};
       final newPost = {
         'id': response['id'].toString(),

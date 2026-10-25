@@ -3,11 +3,11 @@ import 'package:phosphor_icons/phosphor_icons.dart';
 import 'post_detail.dart';
 import 'package:provider/provider.dart';
 import 'post_provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // Needed for checking current user
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PostCard extends StatelessWidget {
   final String id;
-  final String authorId; // Added authorId parameter
+  final String authorId;
   final String uploaderName;
   final String? uploaderAvatar;
   final String category;
@@ -22,7 +22,7 @@ class PostCard extends StatelessWidget {
   const PostCard({
     super.key,
     required this.id,
-    required this.authorId, // Added to constructor
+    required this.authorId,
     required this.uploaderName,
     this.uploaderAvatar,
     required this.category,
@@ -80,28 +80,30 @@ class PostCard extends StatelessWidget {
     final isUpvoted = Provider.of<PostProvider>(context).hasUpvoted(id);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    // Check if the current user is the author of this specific post
     final currentUserId = Supabase.instance.client.auth.currentUser?.id;
     final isAuthor = currentUserId == authorId;
 
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PostDetailScreen(
-              id: id,
-              uploaderName: uploaderName,
-              uploaderAvatar: uploaderAvatar,
-              role: role,
-              category: category,
-              timeAgo: timeAgo,
-              content: content,
-              imageUrl: imageUrl,
-            ),
+    // Helper navigation method to open PostDetailScreen
+    void navigateToDetail() {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PostDetailScreen(
+            id: id,
+            uploaderName: uploaderName,
+            uploaderAvatar: uploaderAvatar,
+            role: role,
+            category: category,
+            timeAgo: timeAgo,
+            content: content,
+            imageUrl: imageUrl,
           ),
-        );
-      },
+        ),
+      );
+    }
+
+    return InkWell(
+      onTap: navigateToDetail, // Card tap opens details
       child: Card(
         color: isDarkMode
             ? const Color.fromARGB(255, 30, 30, 30)
@@ -176,7 +178,6 @@ class PostCard extends StatelessWidget {
                     ),
                   ),
 
-                  // Only show delete menu if logged-in user is the author
                   if (isAuthor)
                     PopupMenuButton<String>(
                       icon: const Icon(
@@ -304,8 +305,10 @@ class PostCard extends StatelessWidget {
                       ),
                     ),
                   ),
+
+                  // --- Comment Button now navigates to Post Details ---
                   TextButton.icon(
-                    onPressed: () {},
+                    onPressed: navigateToDetail,
                     style: TextButton.styleFrom(
                       foregroundColor: const Color.fromARGB(
                         255,
@@ -320,6 +323,7 @@ class PostCard extends StatelessWidget {
                     ),
                     label: Text('$comments', style: const TextStyle()),
                   ),
+
                   TextButton.icon(
                     onPressed: () {},
                     style: TextButton.styleFrom(
