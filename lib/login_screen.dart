@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_helloworld/main.dart';
-import 'sign_up.dart'; // Change to sign_up_3.dart if that is your current file name
-import 'package:supabase_flutter/supabase_flutter.dart'; // 1. Added Supabase import
+import 'sign_up.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

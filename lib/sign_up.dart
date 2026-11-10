@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // Add Supabase import
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -320,7 +320,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  // UPDATED** Added the TextEditingController parameter
+  //Added the TextEditingController parameter
   Widget _buildTextField({
     required TextEditingController controller,
     required String hint,

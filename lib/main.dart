@@ -23,7 +23,7 @@ void main() async {
     anonKey: 'sb_publishable_NS7sWRbh_R1DFJxFxsDAQg_y_C0YI_N',
   );
 
-  // 3. Run app normally
+  //Run app normally
   runApp(
     MultiProvider(
       providers: [
@@ -35,7 +35,7 @@ void main() async {
   );
 }
 
-// 2. A new top-level widget to handle the global theme and initial route
+//A new top-level widget to handle the global theme and initial route
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
@@ -44,6 +44,7 @@ class MainApp extends StatelessWidget {
     // Listen to the ThemeProvider to know if we are in Light, Dark, or System mode
     final themeProvider = Provider.of<ThemeProvider>(context);
 
+    //Theme
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       themeMode: themeProvider.themeMode, // Instantly switches themes
@@ -69,13 +70,13 @@ class MainApp extends StatelessWidget {
         ),
       ),
 
-      // Keep your splash screen as the starting point!
+      // Keep splash screen as the starting point!
       home: const SplashScreen(),
     );
   }
 }
 
-// 3. Your main navigation screen (now strictly a Scaffold, no longer a nested MaterialApp)
+//main navigation screen (now strictly a Scaffold, no longer a nested MaterialApp)
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 

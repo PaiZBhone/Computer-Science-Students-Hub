@@ -21,7 +21,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
   File? _selectedImage;
   bool _isUploading = false;
   String _uploaderName = 'Loading...';
-  String? _uploaderAvatar; // NEW: Added to store the avatar URL
+  String? _uploaderAvatar; //Added to store the avatar URL
   final supabase = Supabase.instance.client;
 
   // Category list
@@ -53,7 +53,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
             .from('profiles')
             .select(
               'display_name, avatar_url',
-            ) // NEW: Fetches avatar_url as well
+            ) //Fetches avatar_url as well
             .eq('id', user.id)
             .single();
 
@@ -61,7 +61,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
           setState(() {
             _uploaderName = response['display_name'] ?? 'Unknown User';
             _uploaderAvatar =
-                response['avatar_url']; // NEW: Assigns the fetched avatar URL
+                response['avatar_url']; //Assigns the fetched avatar URL
           });
         }
       }
@@ -233,7 +233,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // NEW: Dynamic Avatar logic mirroring the feed card
+                  //Dynamic Avatar logic mirroring the feed card
                   CircleAvatar(
                     radius: 24,
                     backgroundColor: const Color.fromARGB(

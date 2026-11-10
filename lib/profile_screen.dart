@@ -2,11 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:provider/provider.dart'; // NEW
+import 'package:provider/provider.dart';
 import 'login_screen.dart';
 import 'settting_screen.dart';
-import 'post_provider.dart'; // NEW
-import 'post.dart'; // NEW
+import 'post_provider.dart';
+import 'post.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
