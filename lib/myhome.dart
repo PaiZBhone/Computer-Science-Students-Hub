@@ -209,8 +209,7 @@ class _MyhomeState extends State<Myhome> {
                       final post = displayedPosts[index];
                       return PostCard(
                         id: post['id'],
-                        authorId:
-                            post['authorId'], // Added author ID passed to card
+                        authorId: post['authorId'],
                         uploaderName: post['uploaderName'],
                         uploaderAvatar: post['uploaderAvatar'],
                         role: post['role'],
@@ -224,6 +223,9 @@ class _MyhomeState extends State<Myhome> {
                       );
                     }, childCount: displayedPosts.length),
                   ),
+
+                  // added bottom padding spacing for nav bar
+                  const SliverToBoxAdapter(child: SizedBox(height: 100)),
                 ],
               ),
             ),
