@@ -5,6 +5,9 @@ class PostProvider extends ChangeNotifier {
   final Set<String> _upvotedPostIds = {};
   bool hasUpvoted(String postId) => _upvotedPostIds.contains(postId);
 
+  final Set<String> _savedPostIds = {};
+  bool isSaved(String postId) => _savedPostIds.contains(postId);
+
   List<Map<String, dynamic>> _posts = [];
   bool _isLoading = false;
 
@@ -17,7 +20,33 @@ class PostProvider extends ChangeNotifier {
     fetchPosts();
   }
 
-  // --- ADD A COMMENT ---
+  Future<void> toggleSavePost(String postId) async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return;
+
+    try {
+      if (_savedPostIds.contains(postId)) {
+        _savedPostIds.remove(postId);
+        notifyListeners();
+
+        await supabase.from('saved_posts').delete().match({
+          'post_id': postId,
+          'user_id': userId,
+        });
+      } else {
+        _savedPostIds.add(postId);
+        notifyListeners();
+
+        await supabase.from('saved_posts').insert({
+          'post_id': postId,
+          'user_id': userId,
+        });
+      }
+    } catch (error) {
+      print('Error toggling save post: $error');
+    }
+  }
+
   Future<void> addComment(String postId, String content) async {
     final user = supabase.auth.currentUser;
     if (user == null) return;
@@ -49,7 +78,6 @@ class PostProvider extends ChangeNotifier {
     }
   }
 
-  // --- FETCH COMMENTS FOR A SPECIFIC POST ---
   Future<List<Map<String, dynamic>>> fetchComments(String postId) async {
     try {
       final response = await supabase
@@ -62,12 +90,11 @@ class PostProvider extends ChangeNotifier {
 
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      print('Error fetching comments: $e');
+      debugPrint('Error fetching comments: $e');
       return [];
     }
   }
 
-  // --- 1. FETCH POSTS FROM SUPABASE ---
   Future<void> fetchPosts() async {
     if (_posts.isEmpty) {
       _isLoading = true;
@@ -87,9 +114,18 @@ class PostProvider extends ChangeNotifier {
         for (var row in upvotesResponse) {
           _upvotedPostIds.add(row['post_id'].toString());
         }
+
+        final savedResponse = await supabase
+            .from('saved_posts')
+            .select('post_id')
+            .eq('user_id', userId);
+
+        _savedPostIds.clear();
+        for (var row in savedResponse) {
+          _savedPostIds.add(row['post_id'].toString());
+        }
       }
 
-      // Query posts, join profiles, and count upvotes AND comments
       final response = await supabase
           .from('posts')
           .select(
@@ -126,7 +162,7 @@ class PostProvider extends ChangeNotifier {
           'imageUrl': item['image_url'],
           'timeAgo': _calculateTimeAgo(item['created_at']),
           'upvotes': realUpvoteCount,
-          'comments': realCommentCount, // Live count from DB
+          'comments': realCommentCount,
           'share': 0,
         };
       }).toList();

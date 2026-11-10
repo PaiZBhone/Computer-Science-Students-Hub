@@ -220,6 +220,7 @@ class _MyhomeState extends State<Myhome> {
                         upvotes: post['upvotes'],
                         comments: post['comments'],
                         share: post['share'],
+                        //save: post['save'],
                       );
                     }, childCount: displayedPosts.length),
                   ),

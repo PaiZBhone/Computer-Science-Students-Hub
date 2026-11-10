@@ -81,7 +81,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    // Watch provider to keep upvotes and comment counts reactive
     final postData = context.watch<PostProvider>().posts.firstWhere(
       (p) => p['id'] == widget.id,
       orElse: () => {},
@@ -91,10 +90,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     final int commentsCount = postData.isNotEmpty
         ? postData['comments']
         : 0;
-    final int share = postData.isNotEmpty ? postData['share'] : 0;
     final bool isUpvoted = Provider.of<PostProvider>(
       context,
     ).hasUpvoted(widget.id);
+    final bool isSaved = Provider.of<PostProvider>(
+      context,
+    ).isSaved(widget.id);
 
     return Scaffold(
       appBar: AppBar(
@@ -110,7 +111,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Uploader info header
                   Row(
                     children: [
                       CircleAvatar(
@@ -176,7 +176,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   const SizedBox(height: 16),
                   const Divider(height: 1, thickness: 1),
 
-                  // Reaction Bar
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -228,27 +227,37 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         ),
                       ),
                       TextButton.icon(
-                        onPressed: () {},
+                        onPressed: () {
+                          Provider.of<PostProvider>(
+                            context,
+                            listen: false,
+                          ).toggleSavePost(widget.id);
+                        },
                         style: TextButton.styleFrom(
-                          foregroundColor: const Color.fromARGB(
-                            255,
-                            97,
-                            97,
-                            97,
-                          ),
+                          foregroundColor: isSaved
+                              ? Colors.blue
+                              : const Color.fromARGB(255, 97, 97, 97),
                         ),
-                        icon: const Icon(
-                          PhosphorIconsFill.arrowBendUpRight,
+                        icon: Icon(
+                          isSaved
+                              ? PhosphorIconsFill.bookmarkSimple
+                              : PhosphorIconsRegular.bookmarkSimple,
                           size: 20,
                         ),
-                        label: Text('$share', style: const TextStyle()),
+                        label: Text(
+                          isSaved ? 'Saved' : 'Save',
+                          style: TextStyle(
+                            fontWeight: isSaved
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                   const Divider(height: 1, thickness: 1),
                   const SizedBox(height: 12),
 
-                  // Comments section title & list
                   const Text(
                     'Comments',
                     style: TextStyle(
@@ -358,7 +367,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           ),
           const Divider(height: 1, thickness: 1),
 
-          // Comment Bar Section matching search bar styling
           Container(
             padding: const EdgeInsets.symmetric(
               horizontal: 16.0,

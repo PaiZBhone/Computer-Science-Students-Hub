@@ -18,6 +18,7 @@ class PostCard extends StatelessWidget {
   final int upvotes;
   final int comments;
   final int share;
+  //final int save;
 
   const PostCard({
     super.key,
@@ -33,6 +34,7 @@ class PostCard extends StatelessWidget {
     required this.upvotes,
     required this.comments,
     required this.share,
+    //required this.save,
   });
 
   Widget _buildRoleBadge(String role, bool isDarkMode) {
@@ -78,6 +80,7 @@ class PostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUpvoted = Provider.of<PostProvider>(context).hasUpvoted(id);
+    final isSaved = Provider.of<PostProvider>(context).isSaved(id);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     final currentUserId = Supabase.instance.client.auth.currentUser?.id;
@@ -281,6 +284,7 @@ class PostCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  // Upvote button
                   TextButton.icon(
                     onPressed: () {
                       Provider.of<PostProvider>(
@@ -306,7 +310,7 @@ class PostCard extends StatelessWidget {
                     ),
                   ),
 
-                  // --- Comment Button now navigates to Post Details ---
+                  // Comment button navigates to Post Details
                   TextButton.icon(
                     onPressed: navigateToDetail,
                     style: TextButton.styleFrom(
@@ -324,21 +328,33 @@ class PostCard extends StatelessWidget {
                     label: Text('$comments', style: const TextStyle()),
                   ),
 
+                  // Save button replaces share
                   TextButton.icon(
-                    onPressed: () {},
+                    onPressed: () {
+                      Provider.of<PostProvider>(
+                        context,
+                        listen: false,
+                      ).toggleSavePost(id);
+                    },
                     style: TextButton.styleFrom(
-                      foregroundColor: const Color.fromARGB(
-                        255,
-                        97,
-                        97,
-                        97,
-                      ),
+                      foregroundColor: isSaved
+                          ? Colors.blue
+                          : const Color.fromARGB(255, 97, 97, 97),
                     ),
-                    icon: const Icon(
-                      PhosphorIconsFill.arrowBendUpRight,
+                    icon: Icon(
+                      isSaved
+                          ? PhosphorIconsFill.bookmarkSimple
+                          : PhosphorIconsRegular.bookmarkSimple,
                       size: 20,
                     ),
-                    label: Text('$share', style: const TextStyle()),
+                    label: Text(
+                      isSaved ? 'Saved' : 'Save',
+                      style: TextStyle(
+                        fontWeight: isSaved
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
                   ),
                 ],
               ),
