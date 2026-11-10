@@ -2,8 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:provider/provider.dart'; // NEW
 import 'login_screen.dart';
 import 'settting_screen.dart';
+import 'post_provider.dart'; // NEW
+import 'post.dart'; // NEW
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -141,7 +144,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Modal Sheet allowing editing of profile information dynamically based on role
+  // Modal Sheet allowing editing of profile information
   void _showEditProfileDialog() {
     final displayNameController = TextEditingController(
       text: _displayName,
@@ -184,8 +187,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-
-                    // Display Name
                     TextField(
                       controller: displayNameController,
                       decoration: InputDecoration(
@@ -197,8 +198,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // Full Name
                     TextField(
                       controller: fullNameController,
                       decoration: InputDecoration(
@@ -210,8 +209,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // Role Selection Dropdown
                     DropdownButtonFormField<String>(
                       value: selectedRole,
                       decoration: InputDecoration(
@@ -233,8 +230,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       },
                     ),
                     const SizedBox(height: 16),
-
-                    // Student / Staff ID
                     TextField(
                       controller: idController,
                       decoration: InputDecoration(
@@ -248,8 +243,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // Faculty (shown for all accounts)
                     TextField(
                       controller: facultyController,
                       decoration: InputDecoration(
@@ -262,8 +255,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                     ),
-
-                    // Department (shown only for Non-Student accounts)
                     if (!isStudent) ...[
                       const SizedBox(height: 16),
                       TextField(
@@ -277,10 +268,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                     ],
-
                     const SizedBox(height: 24),
-
-                    // Save Button
                     SizedBox(
                       width: double.infinity,
                       height: 50,
@@ -303,24 +291,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 try {
                                   final user = supabase.auth.currentUser;
                                   if (user != null) {
-                                    final Map<String, dynamic>
-                                    updateData = {
-                                      'display_name': displayNameController
-                                          .text
-                                          .trim(),
-                                      'full_name': fullNameController.text
-                                          .trim(),
-                                      'role': selectedRole,
-                                      'institutional_id': idController.text
-                                          .trim(),
-                                      'faculty': facultyController.text
-                                          .trim(),
-                                      // Clear or set department depending on selected role
-                                      'department': isStudent
-                                          ? ''
-                                          : departmentController.text
-                                                .trim(),
-                                    };
+                                    final Map<String, dynamic> updateData =
+                                        {
+                                          'display_name':
+                                              displayNameController.text
+                                                  .trim(),
+                                          'full_name': fullNameController
+                                              .text
+                                              .trim(),
+                                          'role': selectedRole,
+                                          'institutional_id': idController
+                                              .text
+                                              .trim(),
+                                          'faculty': facultyController.text
+                                              .trim(),
+                                          'department': isStudent
+                                              ? ''
+                                              : departmentController.text
+                                                    .trim(),
+                                        };
 
                                     await supabase
                                         .from('profiles')
@@ -390,69 +379,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Settings Menu Dialog
-  void _showSettingsDialog() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 12),
-              ListTile(
-                leading: const Icon(
-                  Icons.camera_alt_outlined,
-                  color: Color.fromARGB(255, 41, 99, 165),
-                ),
-                title: const Text('Change Profile Picture'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickAndUploadAvatar();
-                },
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.edit_outlined,
-                  color: Color.fromARGB(255, 41, 99, 165),
-                ),
-                title: const Text('Edit Profile Information'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showEditProfileDialog();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.redAccent),
-                title: const Text(
-                  'Log Out',
-                  style: TextStyle(color: Colors.redAccent),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _handleLogout();
-                },
-              ),
-              const SizedBox(height: 12),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -464,209 +390,298 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'My Profile',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(),
-                ),
-              );
-            },
+    // Wrap the Scaffold in a DefaultTabController
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'My Profile',
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          elevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.settings, color: Colors.white),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+        body: SafeArea(
           child: Column(
             children: [
-              const SizedBox(height: 10),
-
-              // Interactive Avatar
-              GestureDetector(
-                onTap: _isUploadingAvatar ? null : _pickAndUploadAvatar,
-                child: Stack(
+              // --- FIXED PROFILE HEADER SECTION ---
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: 24.0,
+                  right: 24.0,
+                  top: 24.0,
+                  bottom: 12.0,
+                ),
+                child: Column(
                   children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor: const Color.fromARGB(
-                        255,
-                        41,
-                        99,
-                        165,
-                      ),
-                      backgroundImage:
-                          _avatarUrl != null && _avatarUrl!.isNotEmpty
-                          ? NetworkImage(_avatarUrl!)
-                          : null,
-                      child: _isUploadingAvatar
-                          ? const CircularProgressIndicator(
-                              color: Colors.white,
-                            )
-                          : (_avatarUrl == null || _avatarUrl!.isEmpty)
-                          ? Text(
-                              _displayName.isNotEmpty
-                                  ? _displayName[0].toUpperCase()
-                                  : 'U',
-                              style: const TextStyle(
-                                fontSize: 40,
-                                fontWeight: FontWeight.bold,
+                    // Interactive Avatar
+                    GestureDetector(
+                      onTap: _isUploadingAvatar
+                          ? null
+                          : _pickAndUploadAvatar,
+                      child: Stack(
+                        children: [
+                          CircleAvatar(
+                            radius: 50,
+                            backgroundColor: const Color.fromARGB(
+                              255,
+                              41,
+                              99,
+                              165,
+                            ),
+                            backgroundImage:
+                                _avatarUrl != null &&
+                                    _avatarUrl!.isNotEmpty
+                                ? NetworkImage(_avatarUrl!)
+                                : null,
+                            child: _isUploadingAvatar
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                : (_avatarUrl == null ||
+                                      _avatarUrl!.isEmpty)
+                                ? Text(
+                                    _displayName.isNotEmpty
+                                        ? _displayName[0].toUpperCase()
+                                        : 'U',
+                                    style: const TextStyle(
+                                      fontSize: 40,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: const BoxDecoration(
+                                color: Color.fromARGB(255, 41, 99, 165),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                size: 18,
                                 color: Colors.white,
                               ),
-                            )
-                          : null,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: const BoxDecoration(
+                    const SizedBox(height: 16),
+                    Text(
+                      _displayName,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(
+                          255,
+                          41,
+                          99,
+                          165,
+                        ).withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        _role,
+                        style: const TextStyle(
                           color: Color.fromARGB(255, 41, 99, 165),
-                          shape: BoxShape.circle,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
                         ),
-                        child: const Icon(
-                          Icons.camera_alt,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 40,
+                      child: ElevatedButton.icon(
+                        onPressed: _showEditProfileDialog,
+                        icon: const Icon(
+                          Icons.edit,
                           size: 18,
                           color: Colors.white,
+                        ),
+                        label: const Text(
+                          'Edit Profile',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(
+                            255,
+                            41,
+                            99,
+                            165,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
 
-              // Display Name Header
-              Text(
-                _displayName,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+              // --- TAB BAR ---
+              TabBar(
+                labelColor: isDarkMode ? Colors.white : Colors.black,
+                unselectedLabelColor: Colors.grey,
+                indicatorColor: const Color.fromARGB(255, 41, 99, 165),
+                indicatorWeight: 3,
+                tabs: const [
+                  Tab(text: 'About'),
+                  Tab(text: 'Saved Posts'),
+                ],
               ),
-              const SizedBox(height: 4),
 
-              // Role Badge
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(
-                    255,
-                    41,
-                    99,
-                    165,
-                  ).withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  _role,
-                  style: const TextStyle(
-                    color: Color.fromARGB(255, 41, 99, 165),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Edit Profile Action Button
-              SizedBox(
-                width: double.infinity,
-                height: 45,
-                child: ElevatedButton.icon(
-                  onPressed: _showEditProfileDialog,
-                  icon: const Icon(
-                    Icons.edit,
-                    size: 18,
-                    color: Colors.white,
-                  ),
-                  label: const Text(
-                    'Edit Profile',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
+              // --- TAB BAR VIEWS ---
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    // TAB 1: ABOUT (Info Tiles)
+                    SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(
+                        24,
+                        24,
+                        24,
+                        100,
+                      ), // Bottom padding for nav bar
+                      child: Column(
+                        children: [
+                          _buildInfoTile(
+                            'Display Name',
+                            _displayName,
+                            Icons.badge_outlined,
+                            isDarkMode,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildInfoTile(
+                            'Full Name',
+                            _fullName,
+                            Icons.person_outline,
+                            isDarkMode,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildInfoTile(
+                            'Email',
+                            _email,
+                            Icons.email_outlined,
+                            isDarkMode,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildInfoTile(
+                            isStudent ? 'Student ID' : 'Staff ID',
+                            _institutionalId,
+                            Icons.card_membership_outlined,
+                            isDarkMode,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildInfoTile(
+                            'Faculty',
+                            _faculty,
+                            Icons.account_balance_outlined,
+                            isDarkMode,
+                          ),
+                          if (!isStudent) ...[
+                            const SizedBox(height: 12),
+                            _buildInfoTile(
+                              'Department',
+                              _department,
+                              Icons.business_outlined,
+                              isDarkMode,
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(
-                      255,
-                      41,
-                      99,
-                      165,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+
+                    // TAB 2: SAVED POSTS
+                    _buildSavedPostsTab(context, isDarkMode),
+                  ],
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // Information Display Cards
-              _buildInfoTile(
-                'Display Name',
-                _displayName,
-                Icons.badge_outlined,
-                isDarkMode,
-              ),
-              const SizedBox(height: 12),
-              _buildInfoTile(
-                'Full Name',
-                _fullName,
-                Icons.person_outline,
-                isDarkMode,
-              ),
-              const SizedBox(height: 12),
-              _buildInfoTile(
-                'Email',
-                _email,
-                Icons.email_outlined,
-                isDarkMode,
-              ),
-              const SizedBox(height: 12),
-              _buildInfoTile(
-                isStudent ? 'Student ID' : 'Staff ID',
-                _institutionalId,
-                Icons.card_membership_outlined,
-                isDarkMode,
-              ),
-              const SizedBox(height: 12),
-              _buildInfoTile(
-                'Faculty',
-                _faculty,
-                Icons.account_balance_outlined,
-                isDarkMode,
-              ),
-
-              // Department Card (Hidden if account role is Student)
-              if (!isStudent) ...[
-                const SizedBox(height: 12),
-                _buildInfoTile(
-                  'Department',
-                  _department,
-                  Icons.business_outlined,
-                  isDarkMode,
-                ),
-              ],
             ],
           ),
         ),
       ),
+    );
+  }
+
+  // Helper method to build the saved posts tab
+  Widget _buildSavedPostsTab(BuildContext context, bool isDarkMode) {
+    // Watch the provider to get real-time updates when a user saves/unsaves a post
+    final provider = context.watch<PostProvider>();
+
+    // Filter out only the posts where the ID is in the saved list
+    final savedPosts = provider.posts
+        .where((post) => provider.isSaved(post['id']))
+        .toList();
+
+    if (savedPosts.isEmpty) {
+      return Center(
+        child: Text(
+          'No saved posts yet.',
+          style: TextStyle(
+            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            fontSize: 16,
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(
+        top: 8,
+        bottom: 100,
+      ), // Bottom padding for the floating navigation bar
+      itemCount: savedPosts.length,
+      itemBuilder: (context, index) {
+        final post = savedPosts[index];
+        return PostCard(
+          id: post['id'],
+          authorId: post['authorId'],
+          uploaderName: post['uploaderName'],
+          uploaderAvatar: post['uploaderAvatar'],
+          role: post['role'],
+          category: post['category'],
+          timeAgo: post['timeAgo'],
+          content: post['content'],
+          imageUrl: post['imageUrl'],
+          upvotes: post['upvotes'],
+          comments: post['comments'],
+          share: post['share'],
+        );
+      },
     );
   }
 
