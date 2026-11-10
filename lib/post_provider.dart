@@ -17,7 +17,25 @@ class PostProvider extends ChangeNotifier {
   final supabase = Supabase.instance.client;
 
   PostProvider() {
+    // Clear user-specific data on logout and reload on login.
+    supabase.auth.onAuthStateChange.listen((data) {
+      final AuthChangeEvent event = data.event;
+
+      if (event == AuthChangeEvent.signedOut) {
+        _clearData();
+      } else if (event == AuthChangeEvent.signedIn) {
+        fetchPosts();
+      }
+    });
+
     fetchPosts();
+  }
+
+  void _clearData() {
+    _posts = [];
+    _savedPostIds.clear();
+    _upvotedPostIds.clear();
+    notifyListeners();
   }
 
   Future<void> toggleSavePost(String postId) async {
@@ -43,7 +61,7 @@ class PostProvider extends ChangeNotifier {
         });
       }
     } catch (error) {
-      print('Error toggling save post: $error');
+      debugPrint('Error toggling save post: $error');
     }
   }
 
@@ -69,12 +87,13 @@ class PostProvider extends ChangeNotifier {
       });
 
       final index = _posts.indexWhere((post) => post['id'] == postId);
+
       if (index != -1) {
         _posts[index]['comments'] += 1;
         notifyListeners();
       }
     } catch (e) {
-      print('Error saving comment: $e');
+      debugPrint('Error saving comment: $e');
     }
   }
 
@@ -111,6 +130,7 @@ class PostProvider extends ChangeNotifier {
             .eq('user_id', userId);
 
         _upvotedPostIds.clear();
+
         for (var row in upvotesResponse) {
           _upvotedPostIds.add(row['post_id'].toString());
         }
@@ -121,6 +141,7 @@ class PostProvider extends ChangeNotifier {
             .eq('user_id', userId);
 
         _savedPostIds.clear();
+
         for (var row in savedResponse) {
           _savedPostIds.add(row['post_id'].toString());
         }
@@ -141,17 +162,19 @@ class PostProvider extends ChangeNotifier {
 
         int realUpvoteCount = 0;
         final upvotesData = item['upvotes'];
+
         if (upvotesData is List && upvotesData.isNotEmpty) {
           realUpvoteCount = upvotesData[0]['count'] ?? 0;
         }
 
         int realCommentCount = 0;
         final commentsData = item['comments'];
+
         if (commentsData is List && commentsData.isNotEmpty) {
           realCommentCount = commentsData[0]['count'] ?? 0;
         }
 
-        return {
+        return <String, dynamic>{
           'id': postId,
           'authorId': item['author_id'],
           'uploaderName': profile['display_name'] ?? 'Unknown User',
@@ -167,7 +190,7 @@ class PostProvider extends ChangeNotifier {
         };
       }).toList();
     } catch (error) {
-      print('Error fetching data from Supabase: $error');
+      debugPrint('Error fetching data from Supabase: $error');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -196,6 +219,7 @@ class PostProvider extends ChangeNotifier {
 
   Future<void> upvotePost(String postId) async {
     final index = _posts.indexWhere((post) => post['id'] == postId);
+
     if (index == -1) return;
 
     final userId = supabase.auth.currentUser?.id;
@@ -222,7 +246,7 @@ class PostProvider extends ChangeNotifier {
         });
       }
     } catch (error) {
-      print('Error syncing upvote: $error');
+      debugPrint('Error syncing upvote: $error');
     }
   }
 
@@ -233,7 +257,7 @@ class PostProvider extends ChangeNotifier {
     try {
       await supabase.from('posts').delete().eq('id', postId);
     } catch (error) {
-      print('Error deleting post: $error');
+      debugPrint('Error deleting post: $error');
     }
   }
 
@@ -270,7 +294,8 @@ class PostProvider extends ChangeNotifier {
           .single();
 
       final profile = response['profiles'] ?? {};
-      final newPost = {
+
+      final Map<String, dynamic> newPost = {
         'id': response['id'].toString(),
         'authorId': user.id,
         'uploaderName': profile['display_name'] ?? currentDisplayName,
@@ -288,7 +313,7 @@ class PostProvider extends ChangeNotifier {
       _posts.insert(0, newPost);
       notifyListeners();
     } catch (error) {
-      print('Error saving post: $error');
+      debugPrint('Error saving post: $error');
     }
   }
 }
