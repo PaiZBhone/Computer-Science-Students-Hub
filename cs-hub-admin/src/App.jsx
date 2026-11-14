@@ -4,7 +4,8 @@ import Login from './components/Login';
 import Overview from './components/Overview';
 import PostsTable from './components/PostsTable';
 import UsersTable from './components/UserTable';
-import { LayoutDashboard, FileText, Users, LogOut, ShieldCheck } from 'lucide-react';
+import CommentsTable from './components/CommentsTable';
+import { LayoutDashboard, FileText, Users, MessageSquare, LogOut, ShieldCheck } from 'lucide-react';
 import './App.css';
 export default function App() {
   const [session, setSession] = useState(null);
@@ -87,6 +88,12 @@ export default function App() {
             <FileText size={18} /> Manage Posts
           </button>
           <button
+          className={activeTab === 'comments' ? 'active' : ''}
+          onClick={() => setActiveTab('comments')}
+          >
+          <MessageSquare size={18} /> Manage Comments
+          </button>
+          <button
             className={activeTab === 'users' ? 'active' : ''}
             onClick={() => setActiveTab('users')}
           >
@@ -105,6 +112,7 @@ export default function App() {
         {activeTab === 'overview' && <Overview />}
         {activeTab === 'posts' && <PostsTable />}
         {activeTab === 'users' && <UsersTable />}
+        {activeTab === 'comments' && <CommentsTable />}
       </main>
     </div>
   );
