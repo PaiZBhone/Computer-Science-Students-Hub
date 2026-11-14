@@ -68,12 +68,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
       }
     } catch (e) {
-      print('Error fetching profile: $e');
+      debugPrint('Error fetching profile: $e');
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // Upload or Change Profile Picture
   // Upload or Change Profile Picture
   Future<void> _pickAndUploadAvatar() async {
     try {
@@ -243,8 +242,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         );
                       }).toList(),
                       onChanged: (val) {
-                        if (val != null)
+                        if (val != null) {
                           setModalState(() => selectedRole = val);
+                        }
                       },
                     ),
                     const SizedBox(height: 16),
@@ -397,6 +397,287 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // Modal Sheet allowing user to change their password safely
+  void _showChangePasswordDialog() {
+    final currentPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+
+    bool obscureCurrent = true;
+    bool obscureNew = true;
+    bool obscureConfirm = true;
+    bool isUpdating = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Change Password',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Current Password
+                    TextField(
+                      controller: currentPasswordController,
+                      obscureText: obscureCurrent,
+                      decoration: InputDecoration(
+                        labelText: 'Current Password',
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            obscureCurrent
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () => setModalState(
+                            () => obscureCurrent = !obscureCurrent,
+                          ),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // New Password
+                    TextField(
+                      controller: newPasswordController,
+                      obscureText: obscureNew,
+                      decoration: InputDecoration(
+                        labelText: 'New Password (min. 6 characters)',
+                        prefixIcon: const Icon(Icons.vpn_key_outlined),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            obscureNew
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () => setModalState(
+                            () => obscureNew = !obscureNew,
+                          ),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Confirm New Password
+                    TextField(
+                      controller: confirmPasswordController,
+                      obscureText: obscureConfirm,
+                      decoration: InputDecoration(
+                        labelText: 'Confirm New Password',
+                        prefixIcon: const Icon(Icons.check_circle_outline),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            obscureConfirm
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () => setModalState(
+                            () => obscureConfirm = !obscureConfirm,
+                          ),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Update Password Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(
+                            255,
+                            41,
+                            99,
+                            165,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: isUpdating
+                            ? null
+                            : () async {
+                                final currentPwd =
+                                    currentPasswordController.text.trim();
+                                final newPwd = newPasswordController.text
+                                    .trim();
+                                final confirmPwd =
+                                    confirmPasswordController.text.trim();
+
+                                if (currentPwd.isEmpty ||
+                                    newPwd.isEmpty ||
+                                    confirmPwd.isEmpty) {
+                                  ScaffoldMessenger.of(
+                                    context,
+                                  ).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Please fill in all fields.',
+                                      ),
+                                      backgroundColor: Colors.redAccent,
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                if (newPwd.length < 6) {
+                                  ScaffoldMessenger.of(
+                                    context,
+                                  ).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'New password must be at least 6 characters.',
+                                      ),
+                                      backgroundColor: Colors.redAccent,
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                if (newPwd != confirmPwd) {
+                                  ScaffoldMessenger.of(
+                                    context,
+                                  ).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'New passwords do not match.',
+                                      ),
+                                      backgroundColor: Colors.redAccent,
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                setModalState(() => isUpdating = true);
+
+                                try {
+                                  final email =
+                                      supabase.auth.currentUser?.email;
+                                  if (email == null) {
+                                    throw 'User email not found.';
+                                  }
+
+                                  // 1. Verify current password
+                                  await supabase.auth.signInWithPassword(
+                                    email: email,
+                                    password: currentPwd,
+                                  );
+
+                                  // 2. Update to new password
+                                  await supabase.auth.updateUser(
+                                    UserAttributes(password: newPwd),
+                                  );
+
+                                  if (context.mounted) {
+                                    Navigator.pop(context);
+                                    ScaffoldMessenger.of(
+                                      context,
+                                    ).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Password updated successfully!',
+                                        ),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  }
+                                } on AuthException catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(
+                                      context,
+                                    ).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          e.message.contains(
+                                                'Invalid login',
+                                              )
+                                              ? 'Current password is incorrect.'
+                                              : e.message,
+                                        ),
+                                        backgroundColor: Colors.redAccent,
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(
+                                      context,
+                                    ).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Error: $e'),
+                                        backgroundColor: Colors.redAccent,
+                                      ),
+                                    );
+                                  }
+                                } finally {
+                                  if (context.mounted) {
+                                    setModalState(
+                                      () => isUpdating = false,
+                                    );
+                                  }
+                                }
+                              },
+                        child: isUpdating
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'Update Password',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -408,7 +689,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     }
 
-    // Wrap the Scaffold in a DefaultTabController
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -464,6 +744,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 _avatarUrl != null &&
                                     _avatarUrl!.isNotEmpty
                                 ? NetworkImage(_avatarUrl!)
+                                : null,
+                            onBackgroundImageError:
+                                (_avatarUrl != null &&
+                                    _avatarUrl!.isNotEmpty)
+                                ? (exception, stackTrace) {
+                                    debugPrint(
+                                      'Avatar load error: $exception',
+                                    );
+                                    if (mounted) {
+                                      setState(() => _avatarUrl = null);
+                                    }
+                                  }
                                 : null,
                             child: _isUploadingAvatar
                                 ? const CircularProgressIndicator(
@@ -586,14 +878,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Expanded(
                 child: TabBarView(
                   children: [
-                    // TAB 1: ABOUT (Info Tiles)
+                    // TAB 1: ABOUT (Info Tiles + Security Action)
                     SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(
-                        24,
-                        24,
-                        24,
-                        100,
-                      ), // Bottom padding for nav bar
+                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
                       child: Column(
                         children: [
                           _buildInfoTile(
@@ -639,6 +926,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               isDarkMode,
                             ),
                           ],
+                          const SizedBox(height: 20),
+
+                          // Change Password Action Card
+                          InkWell(
+                            onTap: _showChangePasswordDialog,
+                            borderRadius: BorderRadius.circular(16),
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: isDarkMode
+                                    ? const Color(0xFF1E1E1E)
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isDarkMode
+                                      ? Colors.grey[800]!
+                                      : Colors.grey[200]!,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.lock_reset,
+                                    color: Color.fromARGB(
+                                      255,
+                                      41,
+                                      99,
+                                      165,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  const Expanded(
+                                    child: Text(
+                                      'Change Password',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.chevron_right,
+                                    color: isDarkMode
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -655,12 +992,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Helper method to build the saved posts tab
   Widget _buildSavedPostsTab(BuildContext context, bool isDarkMode) {
-    // Watch the provider to get real-time updates when a user saves/unsaves a post
     final provider = context.watch<PostProvider>();
 
-    // Filter out only the posts where the ID is in the saved list
     final savedPosts = provider.posts
         .where((post) => provider.isSaved(post['id']))
         .toList();
@@ -678,10 +1012,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.only(
-        top: 8,
-        bottom: 100,
-      ), // Bottom padding for the floating navigation bar
+      padding: const EdgeInsets.only(top: 8, bottom: 100),
       itemCount: savedPosts.length,
       itemBuilder: (context, index) {
         final post = savedPosts[index];
