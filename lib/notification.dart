@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'post_detail.dart';
+import 'post_provider.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -32,6 +34,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           .from('notifications')
           .select('''
             *,
+            actor:profiles!notifications_actor_id_fkey (
+              display_name
+            ),
             posts (
               id,
               content,
@@ -76,6 +81,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           .update({'is_read': true})
           .eq('user_id', userId)
           .eq('is_read', false);
+
+      if (mounted) {
+        Provider.of<PostProvider>(
+          context,
+          listen: false,
+        ).fetchUnreadNotificationCount();
+      }
     } catch (e) {
       debugPrint('Error marking all as read: $e');
     }
@@ -95,6 +107,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             .from('notifications')
             .update({'is_read': true})
             .eq('id', notif['id']);
+
+        if (mounted) {
+          Provider.of<PostProvider>(
+            context,
+            listen: false,
+          ).fetchUnreadNotificationCount();
+        }
       } catch (e) {
         debugPrint('Error updating notification status: $e');
       }
@@ -125,6 +144,32 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
+  String _buildLiveTitle(Map<String, dynamic> notif) {
+    final actor = notif['actor'];
+    final String liveName =
+        (actor != null && actor['display_name'] != null)
+        ? actor['display_name']
+        : 'Someone';
+
+    final String type = notif['type'] ?? '';
+    final String rawTitle = notif['title'] ?? '';
+
+    if (type == 'upvote') {
+      return '$liveName upvoted your post.';
+    } else if (type == 'comment') {
+      if (rawTitle.contains('replied to a post')) {
+        return '$liveName replied to a post you commented on.';
+      } else if (rawTitle.contains('also commented')) {
+        return '$liveName also commented on a post you follow.';
+      }
+      return '$liveName commented on your post.';
+    } else if (type.isNotEmpty) {
+      return 'New $type post from $liveName';
+    }
+
+    return rawTitle;
+  }
+
   String _calculateTimeAgo(String? timestamp) {
     if (timestamp == null) return 'Just now';
 
@@ -145,7 +190,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
-  // --- UPDATED CATEGORY ICONS ---
   IconData _getIconForType(String? type) {
     if (type == 'upvote') return Icons.favorite;
     if (type == 'comment') return Icons.chat_bubble;
@@ -163,7 +207,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return Icons.article;
   }
 
-  // --- UPDATED CATEGORY COLORS ---
   Color _getColorForType(String? type) {
     if (type == 'upvote') return Colors.blue;
     if (type == 'comment') return Colors.green;
@@ -268,7 +311,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               ),
                             ),
                             title: Text(
-                              notif['title'] ?? '',
+                              _buildLiveTitle(notif),
                               style: TextStyle(
                                 fontWeight: isUnread
                                     ? FontWeight.bold

@@ -398,7 +398,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // Modal Sheet allowing user to change their password safely
+  // Modal Sheet allowing user to change their password with inline validation
   void _showChangePasswordDialog() {
+    final formKey = GlobalKey<FormState>();
     final currentPasswordController = TextEditingController();
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
@@ -407,6 +409,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     bool obscureNew = true;
     bool obscureConfirm = true;
     bool isUpdating = false;
+    String? errorMessage;
 
     showModalBottomSheet(
       context: context,
@@ -414,261 +417,277 @@ class _ProfileScreenState extends State<ProfileScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
       ),
-      builder: (context) {
+      builder: (modalContext) {
         return StatefulBuilder(
-          builder: (context, setModalState) {
+          builder: (modalContext, setModalState) {
             return Padding(
               padding: EdgeInsets.only(
                 left: 24,
                 right: 24,
                 top: 24,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                bottom: MediaQuery.of(modalContext).viewInsets.bottom + 24,
               ),
               child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Change Password',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Current Password
-                    TextField(
-                      controller: currentPasswordController,
-                      obscureText: obscureCurrent,
-                      decoration: InputDecoration(
-                        labelText: 'Current Password',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            obscureCurrent
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                          ),
-                          onPressed: () => setModalState(
-                            () => obscureCurrent = !obscureCurrent,
-                          ),
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Change Password',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-                    // New Password
-                    TextField(
-                      controller: newPasswordController,
-                      obscureText: obscureNew,
-                      decoration: InputDecoration(
-                        labelText: 'New Password (min. 6 characters)',
-                        prefixIcon: const Icon(Icons.vpn_key_outlined),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            obscureNew
-                                ? Icons.visibility_off
-                                : Icons.visibility,
+                      // Inline Error Banner (visible right inside the modal)
+                      if (errorMessage != null) ...[
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.redAccent.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.redAccent),
                           ),
-                          onPressed: () => setModalState(
-                            () => obscureNew = !obscureNew,
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.error_outline,
+                                color: Colors.redAccent,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  errorMessage!,
+                                  style: const TextStyle(
+                                    color: Colors.redAccent,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+                        const SizedBox(height: 16),
+                      ],
 
-                    // Confirm New Password
-                    TextField(
-                      controller: confirmPasswordController,
-                      obscureText: obscureConfirm,
-                      decoration: InputDecoration(
-                        labelText: 'Confirm New Password',
-                        prefixIcon: const Icon(Icons.check_circle_outline),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            obscureConfirm
-                                ? Icons.visibility_off
-                                : Icons.visibility,
+                      // 1. Current Password
+                      TextFormField(
+                        controller: currentPasswordController,
+                        obscureText: obscureCurrent,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter your current password';
+                          }
+                          return null;
+                        },
+                        decoration: InputDecoration(
+                          labelText: 'Current Password',
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              obscureCurrent
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                            ),
+                            onPressed: () => setModalState(
+                              () => obscureCurrent = !obscureCurrent,
+                            ),
                           ),
-                          onPressed: () => setModalState(
-                            () => obscureConfirm = !obscureConfirm,
-                          ),
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Update Password Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(
-                            255,
-                            41,
-                            99,
-                            165,
-                          ),
-                          shape: RoundedRectangleBorder(
+                          border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onPressed: isUpdating
-                            ? null
-                            : () async {
-                                final currentPwd =
-                                    currentPasswordController.text.trim();
-                                final newPwd = newPasswordController.text
-                                    .trim();
-                                final confirmPwd =
-                                    confirmPasswordController.text.trim();
-
-                                if (currentPwd.isEmpty ||
-                                    newPwd.isEmpty ||
-                                    confirmPwd.isEmpty) {
-                                  ScaffoldMessenger.of(
-                                    context,
-                                  ).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Please fill in all fields.',
-                                      ),
-                                      backgroundColor: Colors.redAccent,
-                                    ),
-                                  );
-                                  return;
-                                }
-
-                                if (newPwd.length < 6) {
-                                  ScaffoldMessenger.of(
-                                    context,
-                                  ).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'New password must be at least 6 characters.',
-                                      ),
-                                      backgroundColor: Colors.redAccent,
-                                    ),
-                                  );
-                                  return;
-                                }
-
-                                if (newPwd != confirmPwd) {
-                                  ScaffoldMessenger.of(
-                                    context,
-                                  ).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'New passwords do not match.',
-                                      ),
-                                      backgroundColor: Colors.redAccent,
-                                    ),
-                                  );
-                                  return;
-                                }
-
-                                setModalState(() => isUpdating = true);
-
-                                try {
-                                  final email =
-                                      supabase.auth.currentUser?.email;
-                                  if (email == null) {
-                                    throw 'User email not found.';
-                                  }
-
-                                  // 1. Verify current password
-                                  await supabase.auth.signInWithPassword(
-                                    email: email,
-                                    password: currentPwd,
-                                  );
-
-                                  // 2. Update to new password
-                                  await supabase.auth.updateUser(
-                                    UserAttributes(password: newPwd),
-                                  );
-
-                                  if (context.mounted) {
-                                    Navigator.pop(context);
-                                    ScaffoldMessenger.of(
-                                      context,
-                                    ).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Password updated successfully!',
-                                        ),
-                                        backgroundColor: Colors.green,
-                                      ),
-                                    );
-                                  }
-                                } on AuthException catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(
-                                      context,
-                                    ).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          e.message.contains(
-                                                'Invalid login',
-                                              )
-                                              ? 'Current password is incorrect.'
-                                              : e.message,
-                                        ),
-                                        backgroundColor: Colors.redAccent,
-                                      ),
-                                    );
-                                  }
-                                } catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(
-                                      context,
-                                    ).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Error: $e'),
-                                        backgroundColor: Colors.redAccent,
-                                      ),
-                                    );
-                                  }
-                                } finally {
-                                  if (context.mounted) {
-                                    setModalState(
-                                      () => isUpdating = false,
-                                    );
-                                  }
-                                }
-                              },
-                        child: isUpdating
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text(
-                                'Update Password',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+
+                      // 2. New Password
+                      TextFormField(
+                        controller: newPasswordController,
+                        obscureText: obscureNew,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter a new password';
+                          }
+                          if (value.trim().length < 6) {
+                            return 'Password must be at least 6 characters';
+                          }
+                          if (value.trim() ==
+                              currentPasswordController.text.trim()) {
+                            return 'New password must be different from current';
+                          }
+                          return null;
+                        },
+                        decoration: InputDecoration(
+                          labelText: 'New Password (min. 6 characters)',
+                          prefixIcon: const Icon(Icons.vpn_key_outlined),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              obscureNew
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                            ),
+                            onPressed: () => setModalState(
+                              () => obscureNew = !obscureNew,
+                            ),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // 3. Confirm New Password
+                      TextFormField(
+                        controller: confirmPasswordController,
+                        obscureText: obscureConfirm,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please confirm your new password';
+                          }
+                          if (value.trim() !=
+                              newPasswordController.text.trim()) {
+                            return 'Passwords do not match';
+                          }
+                          return null;
+                        },
+                        decoration: InputDecoration(
+                          labelText: 'Confirm New Password',
+                          prefixIcon: const Icon(
+                            Icons.check_circle_outline,
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              obscureConfirm
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                            ),
+                            onPressed: () => setModalState(
+                              () => obscureConfirm = !obscureConfirm,
+                            ),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Update Password Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color.fromARGB(
+                              255,
+                              41,
+                              99,
+                              165,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: isUpdating
+                              ? null
+                              : () async {
+                                  // Clear previous server errors
+                                  setModalState(() => errorMessage = null);
+
+                                  // Run all field validators
+                                  if (!formKey.currentState!.validate()) {
+                                    return;
+                                  }
+
+                                  final currentPwd =
+                                      currentPasswordController.text
+                                          .trim();
+                                  final newPwd = newPasswordController.text
+                                      .trim();
+
+                                  setModalState(() => isUpdating = true);
+
+                                  try {
+                                    final email =
+                                        supabase.auth.currentUser?.email;
+                                    if (email == null) {
+                                      throw 'User email not found.';
+                                    }
+
+                                    // 1. Verify current password
+                                    await supabase.auth.signInWithPassword(
+                                      email: email,
+                                      password: currentPwd,
+                                    );
+
+                                    // 2. Update to new password
+                                    await supabase.auth.updateUser(
+                                      UserAttributes(password: newPwd),
+                                    );
+
+                                    if (mounted) {
+                                      Navigator.pop(modalContext);
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Password updated successfully!',
+                                          ),
+                                          backgroundColor: Colors.green,
+                                        ),
+                                      );
+                                    }
+                                  } on AuthException catch (e) {
+                                    setModalState(() {
+                                      errorMessage =
+                                          e.message.toLowerCase().contains(
+                                            'invalid',
+                                          )
+                                          ? 'Current password is incorrect.'
+                                          : e.message;
+                                    });
+                                  } catch (e) {
+                                    setModalState(() {
+                                      errorMessage = 'Error: $e';
+                                    });
+                                  } finally {
+                                    if (modalContext.mounted) {
+                                      setModalState(
+                                        () => isUpdating = false,
+                                      );
+                                    }
+                                  }
+                                },
+                          child: isUpdating
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text(
+                                  'Update Password',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
