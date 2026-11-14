@@ -74,6 +74,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // Upload or Change Profile Picture
+  // Upload or Change Profile Picture
   Future<void> _pickAndUploadAvatar() async {
     try {
       final result = await FilePicker.pickFiles(
@@ -92,11 +93,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (user == null) return;
 
       final file = File(filePath);
-      final fileExt = filePath.split('.').last;
+      final rawExt = filePath.contains('.')
+          ? filePath.split('.').last.toLowerCase()
+          : 'jpg';
+      final fileExt =
+          (rawExt == 'png' || rawExt == 'webp' || rawExt == 'gif')
+          ? rawExt
+          : 'jpg';
+      final mimeType = fileExt == 'jpg' ? 'image/jpeg' : 'image/$fileExt';
+
       final fileName =
           '${user.id}_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
 
-      await supabase.storage.from('avatars').upload(fileName, file);
+      await supabase.storage
+          .from('avatars')
+          .upload(
+            fileName,
+            file,
+            fileOptions: FileOptions(contentType: mimeType, upsert: true),
+          );
 
       final publicUrl = supabase.storage
           .from('avatars')
@@ -113,6 +128,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _isUploadingAvatar = false;
         });
 
+        // Refresh feed posts so the new avatar appears on past posts immediately
+        Provider.of<PostProvider>(context, listen: false).fetchPosts();
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Profile picture updated successfully!'),
@@ -121,7 +139,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       }
     } catch (e) {
-      print('Error uploading avatar: $e');
+      debugPrint('Error uploading avatar: $e');
       if (mounted) {
         setState(() => _isUploadingAvatar = false);
         ScaffoldMessenger.of(context).showSnackBar(

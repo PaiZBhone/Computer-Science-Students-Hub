@@ -14,16 +14,13 @@ import 'package:phosphor_icons/phosphor_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
-  // Ensure Flutter is completely booted up before connecting to the database
   WidgetsFlutterBinding.ensureInitialized();
 
-  // the Supabase connection
   await Supabase.initialize(
     url: 'https://xvqukjmxicwxmqjyzkoz.supabase.co',
     anonKey: 'sb_publishable_NS7sWRbh_R1DFJxFxsDAQg_y_C0YI_N',
   );
 
-  //Run app normally
   runApp(
     MultiProvider(
       providers: [
@@ -35,48 +32,37 @@ void main() async {
   );
 }
 
-//A new top-level widget to handle the global theme and initial route
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Listen to the ThemeProvider to know if we are in Light, Dark, or System mode
     final themeProvider = Provider.of<ThemeProvider>(context);
 
-    //Theme
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      themeMode: themeProvider.themeMode, // Instantly switches themes
-      // --- LIGHT THEME SETTINGS ---
+      themeMode: themeProvider.themeMode,
       theme: ThemeData(
         brightness: Brightness.light,
-        //feed color
         scaffoldBackgroundColor: const Color(0xFFF4F4F8),
         appBarTheme: const AppBarTheme(
-          backgroundColor: const Color.fromARGB(255, 41, 99, 165),
+          backgroundColor: Color.fromARGB(255, 41, 99, 165),
           foregroundColor: Colors.white,
         ),
       ),
-
-      // --- DARK THEME SETTINGS ---
       darkTheme: ThemeData(
         brightness: Brightness.dark,
-        //feed color
         scaffoldBackgroundColor: const Color(0xFF121212),
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFF1E1E1E),
           foregroundColor: Colors.white,
         ),
       ),
-
-      // Keep splash screen as the starting point!
       home: const SplashScreen(),
     );
   }
 }
 
-//main navigation screen (now strictly a Scaffold, no longer a nested MaterialApp)
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -103,19 +89,17 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final hasUnread = context.watch<PostProvider>().hasUnreadNotifications;
 
     return Scaffold(
-      extendBody:
-          true, // Allows the feed to scroll behind the floating bar
+      extendBody: true,
       body: _screens[_selectedIndex],
-      //pill shape nevigation
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
           child: Container(
             height: 62,
             decoration: BoxDecoration(
-              // Negv Color
               color: isDarkMode
                   ? const Color.fromARGB(255, 34, 34, 34)
                   : Colors.white,
@@ -154,6 +138,7 @@ class _MyAppState extends State<MyApp> {
                   LucideIcons.bell,
                   LucideIcons.bell500,
                   isDarkMode,
+                  showBadge: hasUnread,
                 ),
                 _buildNavItem(
                   3,
@@ -173,8 +158,9 @@ class _MyAppState extends State<MyApp> {
     int index,
     IconData unselectedIcon,
     IconData selectedIcon,
-    bool isDarkMode,
-  ) {
+    bool isDarkMode, {
+    bool showBadge = false,
+  }) {
     final isSelected = _selectedIndex == index;
 
     return InkWell(
@@ -184,17 +170,39 @@ class _MyAppState extends State<MyApp> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          // Set to transparent so the background highlight is completely removed
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(25),
         ),
-        child: Icon(
-          isSelected ? selectedIcon : unselectedIcon,
-          size: 24,
-
-          color: isSelected
-              ? const Color.fromARGB(255, 41, 99, 165)
-              : (isDarkMode ? Colors.grey[400] : Colors.grey[600]),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Icon(
+              isSelected ? selectedIcon : unselectedIcon,
+              size: 24,
+              color: isSelected
+                  ? const Color.fromARGB(255, 41, 99, 165)
+                  : (isDarkMode ? Colors.grey[400] : Colors.grey[600]),
+            ),
+            if (showBadge)
+              Positioned(
+                top: -2,
+                right: -2,
+                child: Container(
+                  width: 9,
+                  height: 9,
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isDarkMode
+                          ? const Color.fromARGB(255, 34, 34, 34)
+                          : Colors.white,
+                      width: 1.5,
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );

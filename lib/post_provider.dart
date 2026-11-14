@@ -8,6 +8,10 @@ class PostProvider extends ChangeNotifier {
   final Set<String> _savedPostIds = {};
   bool isSaved(String postId) => _savedPostIds.contains(postId);
 
+  int _unreadNotificationsCount = 0;
+  bool get hasUnreadNotifications => _unreadNotificationsCount > 0;
+  RealtimeChannel? _notificationChannel;
+
   List<Map<String, dynamic>> _posts = [];
   bool _isLoading = false;
 
@@ -17,7 +21,6 @@ class PostProvider extends ChangeNotifier {
   final supabase = Supabase.instance.client;
 
   PostProvider() {
-    // Clear user-specific data on logout and reload on login.
     supabase.auth.onAuthStateChange.listen((data) {
       final AuthChangeEvent event = data.event;
 
@@ -25,17 +28,65 @@ class PostProvider extends ChangeNotifier {
         _clearData();
       } else if (event == AuthChangeEvent.signedIn) {
         fetchPosts();
+        fetchUnreadNotificationCount();
+        _subscribeToNotifications();
       }
     });
 
     fetchPosts();
+    fetchUnreadNotificationCount();
+    _subscribeToNotifications();
   }
 
   void _clearData() {
     _posts = [];
     _savedPostIds.clear();
     _upvotedPostIds.clear();
+    _unreadNotificationsCount = 0;
+    _notificationChannel?.unsubscribe();
+    _notificationChannel = null;
     notifyListeners();
+  }
+
+  Future<void> fetchUnreadNotificationCount() async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return;
+
+    try {
+      final response = await supabase
+          .from('notifications')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('is_read', false);
+
+      _unreadNotificationsCount = (response as List).length;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error fetching unread notifications count: $e');
+    }
+  }
+
+  void _subscribeToNotifications() {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return;
+
+    _notificationChannel?.unsubscribe();
+    _notificationChannel = supabase
+        .channel('public:notifications:$userId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'notifications',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: userId,
+          ),
+          callback: (payload) {
+            fetchUnreadNotificationCount();
+          },
+        )
+        .subscribe();
   }
 
   Future<void> toggleSavePost(String postId) async {
@@ -315,5 +366,11 @@ class PostProvider extends ChangeNotifier {
     } catch (error) {
       debugPrint('Error saving post: $error');
     }
+  }
+
+  @override
+  void dispose() {
+    _notificationChannel?.unsubscribe();
+    super.dispose();
   }
 }
